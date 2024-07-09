@@ -1,0 +1,42 @@
+site_name: MWGRP Package
+
+repo_url : https://github.com/danttis/wgrp
+repo_name : mesor/wgrp
+edit_uri : tree/master/docs
+
+
+theme:
+  features:
+      - navigation.instant
+      - navigation.instant.prefetch
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+        logo: assets/logo.png
+    
+  name: material
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  
+
+
+markdown_extensions:
+  - attr_list
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [mwgrp]
