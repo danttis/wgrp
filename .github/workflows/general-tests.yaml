@@ -1,0 +1,24 @@
+name: General Tests
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+        
+      - name: Install Poetry
+        run: pip install poetry
+        
+      - name: Install Dependencies
+        run: poetry install --without doc
+
+      - name: Run Tests
+        run: poetry run task test
