@@ -41,13 +41,13 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def pred(qtd, mle_objs, TBEs, dataNm_i=None):
-    df = summarize_ics_and_parameters_table(mle_objs, TBEs, caseNm=dataNm_i)[
+def pred(qtd, mle_objs, TBEs, quantile=0.2):
+    df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
     nEventsAheadToPredict = qtd
     # probabilityOfFailure = 5   # revisar
-    quantile = 0.2  # globals()['quantile']
+    # globals()['quantile']
     n = len(TBEs)
 
     optimum = get_optim(mle_objs, df)
@@ -109,6 +109,9 @@ class wgrp_model:
         self.mle_objs_ = None
         self.optimum_ = None
         self.df_ = None
+        self.quantile_s = None
+        self.quantile_i = None
+        self.quantile_n = None
 
     def fit(self, data, type='date', time_unit='days', accumulated=False):
         """
@@ -134,7 +137,7 @@ class wgrp_model:
         # Calls the fit_f method of Fit_grp to fit the model
         self.mle_objs_, self.TBEs_ = fit_f(data, type, time_unit, accumulated)
 
-    def predict(self, qtd=1):
+    def predict(self, qtd=1, quantile=0.2):
         """
         Makes future predictions based on the desired number of events.
 
@@ -157,6 +160,7 @@ class wgrp_model:
             q = 1
         """
         predictions, self.optimum_, self.df_ = pred(
-            qtd, list(self.mle_objs_), list(self.TBEs_)
+            qtd, list(self.mle_objs_), list(self.TBEs_), quantile
         )
-        return predictions
+        self.quantile_s, self.quantile_i, self.quantile_n = predictions['Quantile_97.5'], predictions['Quantile_2.5'], predictions['newQuantile']
+        return predictions[['Intervention', 'Mean']]

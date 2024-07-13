@@ -218,6 +218,7 @@ def cumulative_forecast_times(
         mean_cum_bs = np.mean(cum_bs, axis=0)
         squ = np.percentile(cum_bs, quantiles[0] * 100, axis=0)
         sql = np.percentile(cum_bs, quantiles[1] * 100, axis=0)
+        nql = np.percentile(cum_bs, quantiles[3] * 100, axis=0) # aqui mechi 13/07
 
     res = {
         'cumTimes': cum_x.tolist() if cum_x is not None else None,
@@ -233,7 +234,7 @@ def cumulative_forecast_times(
         'lowerBound': ql.tolist() if ql is not None else None,
         'upperBound': qu.tolist() if qu is not None else None,
         'centralBound': qc.tolist() if qc is not None else None,
-        'newQuantile': qn.tolist() if qn is not None else None,
+        'newQuantile': nql.tolist() if nql is not None else None,
     }
 
     return res
@@ -320,15 +321,15 @@ def compute_forecasting_table(
             'Quantile_2.5': lower,
             #'Quantile_20': pib,
             'Mean': mean,
-            'Quantile_97.5': upper  # ,
-            #'newQuantile': new,
+            'Quantile_97.5': upper ,
+            'newQuantile': new
         }
     )
 
     return ret
 
 
-def summarize_ics_and_parameters_table(mle_objs, x, caseNm, nDecs=2):
+def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
 
     df = pd.DataFrame()
 
