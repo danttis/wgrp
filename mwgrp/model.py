@@ -77,7 +77,7 @@ def pred(qtd, mle_objs, TBEs, quantile=0.2):
         timesPredictFailures=tPredictFailures,
         nIntervetionsReal=n,
     )
-
+   
     bSample = bootstrap_sample(parameters)
     theoreticalMoments = sample_conditional_moments(parameters)
 
@@ -87,12 +87,12 @@ def pred(qtd, mle_objs, TBEs, quantile=0.2):
         conditional_means=theoreticalMoments,
         parameters=parameters,
         probability_of_failure=qtd,  # revisar
-        quantile=quantile,
+        quantile=quantile
     )   # x=None, bootstrap_sample=None, conditional_means=None, parameters=None, probability_of_failure=0, quantile=0.1
 
     forecasting_final = compute_forecasting_table(forecasting, initial_time=10)
 
-    return forecasting_final, optimum, df
+    return forecasting_final, optimum, df, parameters
 
 
 class wgrp_model:
@@ -112,6 +112,7 @@ class wgrp_model:
         self.quantile_s = None
         self.quantile_i = None
         self.quantile_n = None
+        self.parameters = None
 
     def fit(self, data, type='date', time_unit='days', accumulated=False):
         """
@@ -159,7 +160,7 @@ class wgrp_model:
             beta = 0.41123404255463386
             q = 1
         """
-        predictions, self.optimum_, self.df_ = pred(
+        predictions, self.optimum_, self.df_, self.parameters = pred(
             qtd, list(self.mle_objs_), list(self.TBEs_), quantile
         )
         self.quantile_s, self.quantile_i, self.quantile_n = predictions['Quantile_97.5'], predictions['Quantile_2.5'], predictions['newQuantile']

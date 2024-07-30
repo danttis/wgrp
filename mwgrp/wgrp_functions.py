@@ -415,3 +415,8 @@ def lwgrp(x, a, b, q, propagations, log=True) -> float:
     if not log:
         res = np.exp(l)
     return float(res)
+
+
+
+def golf_wgrp(x,y):
+    

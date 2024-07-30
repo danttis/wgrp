@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error, r2_score
 
 from mwgrp.base_functions import Parameters
 from mwgrp.wgrp_functions import ic_wgrp, qwgrp
@@ -30,6 +31,15 @@ def bootstrap_sample(parameters):
 
     return sample_matrix
 
+def acumular_valores(sequencia):
+    acumulado = 0
+    acumulados = []
+
+    for valor in sequencia:
+        acumulado += valor
+        acumulados.append(acumulado)
+
+    return acumulados
 
 def cumulative_forecast_times(
     x=None,
@@ -37,9 +47,12 @@ def cumulative_forecast_times(
     conditional_means=None,
     parameters=None,
     probability_of_failure=0,
-    quantile=0.1,
+    quantile=0.1
 ):
-    quantiles = [0.975, 0.025, 0.2, quantile]
+    quantiles = [0.975, 0.025]
+    percentis = [i/100 for i in range(1, 100)]
+    quantiles.extend(percentis)
+
     cum_x = None
     lwd = {}
     lty = {}
@@ -218,8 +231,23 @@ def cumulative_forecast_times(
         mean_cum_bs = np.mean(cum_bs, axis=0)
         squ = np.percentile(cum_bs, quantiles[0] * 100, axis=0)
         sql = np.percentile(cum_bs, quantiles[1] * 100, axis=0)
-        nql = np.percentile(cum_bs, quantiles[3] * 100, axis=0) # aqui mechi 13/07
+        # aqui mechi 13/07
+        
+        best_quantile = None
+        min_mse = float('inf')
 
+        # Iterar sobre cada quantil e calcular o MSE
+        
+        real_serie = acumular_valores(x)
+        for quantile in quantiles:
+            tmp = list(np.percentile(cum_bs, quantile * 100, axis=0))
+            mse = mean_squared_error(real_serie, tmp[:len(x)])
+            
+            if mse < min_mse:
+                min_mse = mse
+                best_quantile = quantile
+        
+        nql  = np.percentile(cum_bs, best_quantile * 100, axis=0)
     res = {
         'cumTimes': cum_x.tolist() if cum_x is not None else None,
         'cumQuantile': cum_q.tolist() if cum_q is not None else None,
@@ -235,6 +263,7 @@ def cumulative_forecast_times(
         'upperBound': qu.tolist() if qu is not None else None,
         'centralBound': qc.tolist() if qc is not None else None,
         'newQuantile': nql.tolist() if nql is not None else None,
+        'inicialTime': real_serie[0]
     }
 
     return res
@@ -288,6 +317,7 @@ def append_times_between_events_from_date_events(data, time_unit):
 def compute_forecasting_table(
     forecasting, initial_time=10, failure_times=None
 ):
+    initial_time = forecasting['inicialTime']
     n = len(forecasting['cumTimes'])
     m = len(forecasting['meanBootstraps']) - n
 
