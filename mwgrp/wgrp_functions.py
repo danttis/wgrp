@@ -2,6 +2,7 @@ import numpy as np
 
 from mwgrp.base_functions import Parameters
 from mwgrp.r_functions import *
+
 from mwgrp.virtual_ages import get_sample_virtual_ages, virtual_age
 
 
@@ -418,5 +419,3 @@ def lwgrp(x, a, b, q, propagations, log=True) -> float:
 
 
 
-def golf_wgrp(x,y):
-    
