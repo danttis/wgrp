@@ -31,15 +31,16 @@ def bootstrap_sample(parameters):
 
     return sample_matrix
 
-def acumular_valores(sequencia):
-    acumulado = 0
-    acumulados = []
+def accumulate_values(sequence):
+    accumulated = 0
+    accumulated_values = []
 
-    for valor in sequencia:
-        acumulado += valor
-        acumulados.append(acumulado)
+    for value in sequence:
+        accumulated += value
+        accumulated_values.append(accumulated)
 
-    return acumulados
+    return accumulated_values
+
 
 def cumulative_forecast_times(
     x=None,
@@ -238,7 +239,7 @@ def cumulative_forecast_times(
 
         # Iterar sobre cada quantil e calcular o MSE
         
-        real_serie = acumular_valores(x)
+        real_serie = accumulate_values(x)
         for quantile in quantiles:
             tmp = list(np.percentile(cum_bs, quantile * 100, axis=0))
             mse = mean_squared_error(real_serie, tmp[:len(x)])
