@@ -126,14 +126,14 @@ def get_virtual_ages_and_a(b, q, propagations, x) -> dict:
         for i in range(n):
             current_value = x[i] + previous_virtual_age
             if current_value < 0:
-                print(
-                    f'Warning: invalid value encountered at index {i}. current_value={current_value}, setting to 0.'
-                )
+                # print(
+                #     f'Warning: invalid value encountered at index {i}. current_value={current_value}, setting to 0.'
+                # )
                 current_value = 0
             if previous_virtual_age < 0:
-                print(
-                    f'Warning: invalid value encountered at index {i}. previous_virtual_age={previous_virtual_age}, setting to 0.'
-                )
+                # print(
+                #     f'Warning: invalid value encountered at index {i}. previous_virtual_age={previous_virtual_age}, setting to 0.'
+                # )
                 previous_virtual_age = 0
 
             current_value_b = np.power(current_value, b)

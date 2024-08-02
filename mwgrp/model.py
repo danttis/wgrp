@@ -16,6 +16,7 @@ def fit_f(data, type='date', time_unit='days', accumulated=False):
         )
         TBEs = newData_i['TBE']
         event_types = list(newData_i['event_type'])
+        
     elif type == 'numeric':
         if accumulated:
             accumulated_time = [
@@ -25,7 +26,7 @@ def fit_f(data, type='date', time_unit='days', accumulated=False):
         else:
             TBEs = data
         event_types = ['Corrective'] * len(TBEs)
-
+      
     mle_objs = getMLE_objs(
         timesBetweenInterventions=list(TBEs),
         interventionsTypes=event_types,
@@ -41,7 +42,7 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def pred(qtd, mle_objs, TBEs, quantile=0.2):
+def pred(qtd, mle_objs, TBEs, quantile=0.2, events_in_the_future_tense = 0):
     df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
@@ -60,7 +61,7 @@ def pred(qtd, mle_objs, TBEs, quantile=0.2):
         optimum['propagations'] = np.ones(n)
 
     cF = np.sum(TBEs)
-    tPredictFailures = 5   # globals()['failuresInTime']
+    tPredictFailures =  events_in_the_future_tense  # globals()['failuresInTime']
     m = nEventsAheadToPredict
 
     pmPropagations = np.concatenate(
@@ -113,6 +114,7 @@ class wgrp_model:
         self.quantile_i = None
         self.quantile_n = None
         self.parameters = None
+        self.events_in_the_future_tense = None
 
     def fit(self, data, type='date', time_unit='days', accumulated=False):
         """
@@ -138,7 +140,7 @@ class wgrp_model:
         # Calls the fit_f method of Fit_grp to fit the model
         self.mle_objs_, self.TBEs_ = fit_f(data, type, time_unit, accumulated)
 
-    def predict(self, qtd=1, quantile=0.2):
+    def predict(self, qtd=1, quantile=0.2, events_in_the_future_tense=0):
         """
         Makes future predictions based on the desired number of events.
 
@@ -161,7 +163,7 @@ class wgrp_model:
             q = 1
         """
         predictions, self.optimum_, self.df_, self.parameters = pred(
-            qtd, list(self.mle_objs_), list(self.TBEs_), quantile
+            qtd, list(self.mle_objs_), list(self.TBEs_), quantile, events_in_the_future_tense
         )
-        self.quantile_s, self.quantile_i, self.quantile_n = predictions['Quantile_97.5'], predictions['Quantile_2.5'], predictions['newQuantile']
-        return predictions[['Intervention', 'Mean']]
+        self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events']
+        return predictions['dataframe'][['Intervention', 'Mean']]

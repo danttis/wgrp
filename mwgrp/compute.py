@@ -14,6 +14,7 @@ def bootstrap_sample(parameters):
     n_samples = parameters['nSamples']
     n_interventions = parameters['nInterventions']
     sample_matrix = np.zeros((n_samples, n_interventions))
+    
 
     for i in range(0, n_samples):
         sample = qwgrp(
@@ -23,13 +24,16 @@ def bootstrap_sample(parameters):
             q=parameters['q'],
             propagations=parameters['propagations'],
             reliabilities=None,
+            failures_predict_count = True,
             previous_virtual_age=parameters['previousVirtualAge'],
+            cumulative_failure_count=parameters['cumulativeFailureCount'],
+            times_predict_failures=parameters['timesPredictFailures']
         )
 
         sample_matrix[i, :] = sample['times']
-        # print(sample_matrix)
+        times_predict_failures = sample['timesFailutesMeans']
 
-    return sample_matrix
+    return {'sample_matrix': sample_matrix, 'events_in_the_future_tense':times_predict_failures}
 
 def accumulate_values(sequence):
     accumulated = 0
@@ -222,7 +226,8 @@ def cumulative_forecast_times(
 
     bs_ncol = 0
     cum_bs = None
-
+    events_in_the_future_tense = bootstrap_sample['events_in_the_future_tense']
+    bootstrap_sample = bootstrap_sample['sample_matrix']
     if bootstrap_sample is not None and len(bootstrap_sample) > 0:
         bs_nrow = bootstrap_sample.shape[0]
         bs_ncol = bootstrap_sample.shape[1]
@@ -250,6 +255,7 @@ def cumulative_forecast_times(
         
         nql  = np.percentile(cum_bs, best_quantile * 100, axis=0)
     res = {
+        'eventsInTheFutureTense': events_in_the_future_tense,
         'cumTimes': cum_x.tolist() if cum_x is not None else None,
         'cumQuantile': cum_q.tolist() if cum_q is not None else None,
         'cumCondMeans': cum_cm.tolist() if cum_cm is not None else None,
@@ -357,7 +363,7 @@ def compute_forecasting_table(
         }
     )
 
-    return ret
+    return {'dataframe': ret, 'qtd_events': forecasting['eventsInTheFutureTense']}
 
 
 def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
