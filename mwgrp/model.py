@@ -5,7 +5,7 @@ from mwgrp.getcomputer import *
 from mwgrp.moments import sample_conditional_moments
 
 
-def fit_f(data, type='date', time_unit='days', accumulated=False):
+def _fit(data, type='date', time_unit='days', accumulated=False):
     if type not in ['date', 'numeric']:
         raise ValueError("Invalid type. Expected 'date' or 'numeric'.")
 
@@ -42,7 +42,7 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def pred(qtd, mle_objs, TBEs, quantile=0.2, events_in_the_future_tense = 0):
+def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, best_prediction=False):
     df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
@@ -63,12 +63,17 @@ def pred(qtd, mle_objs, TBEs, quantile=0.2, events_in_the_future_tense = 0):
     cF = np.sum(TBEs)
     tPredictFailures =  events_in_the_future_tense  # globals()['failuresInTime']
     m = nEventsAheadToPredict
+    
+    if best_prediction:
+        nSamples = 100000
+    else: 
+        nSamples=1000
 
     pmPropagations = np.concatenate(
         (optimum['propagations'], np.repeat(PROPAGATION['KijimaII'], m))
     )
     parameters = get_parameters(
-        nSamples=1000,
+        nSamples=nSamples,
         nInterventions=(n + m),
         a=optimum['a'],
         b=optimum['b'],
@@ -87,8 +92,8 @@ def pred(qtd, mle_objs, TBEs, quantile=0.2, events_in_the_future_tense = 0):
         bootstrap_sample=bSample,
         conditional_means=theoreticalMoments,
         parameters=parameters,
-        probability_of_failure=qtd,  # revisar
-        quantile=quantile
+        probability_of_failure=qtd,
+        best_prediction=best_prediction
     )   # x=None, bootstrap_sample=None, conditional_means=None, parameters=None, probability_of_failure=0, quantile=0.1
 
     forecasting_final = compute_forecasting_table(forecasting, initial_time=10)
@@ -115,6 +120,7 @@ class wgrp_model:
         self.quantile_n = None
         self.parameters = None
         self.events_in_the_future_tense = None
+        self.best_prediction = None
 
     def fit(self, data, type='date', time_unit='days', accumulated=False):
         """
@@ -138,32 +144,36 @@ class wgrp_model:
             {'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'virtualAges': [np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)], 'optimum': array([0.62847203]), 'parameters': {'nSamples': 0, 'nInterventions': None, 'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'reliabilities': None, 'previousVirtualAge': 0, 'interventionsTypes': None, 'formalism': 'RP', 'cumulativeFailureCount': None, 'timesPredictFailures': None, 'nIntervetionsReal': None, 'bBounds': {'min': 1e-100, 'max': 5}, 'qBounds': {'min': 0, 'max': 1}}, 'optimum_value': -26.12961862148702}
         """
         # Calls the fit_f method of Fit_grp to fit the model
-        self.mle_objs_, self.TBEs_ = fit_f(data, type, time_unit, accumulated)
+        self.mle_objs_, self.TBEs_ = _fit(data, type, time_unit, accumulated)
 
-    def predict(self, qtd=1, quantile=0.2, events_in_the_future_tense=0):
-        """
-        Makes future predictions based on the desired number of events.
+    def predict(self, qtd=1, events_in_the_future_tense=0, best_prediction=False):
+            """
+            Makes future predictions based on the desired number of events.
 
-        self.optimum_: This attribute stores the optimum value calculated during the prediction process. It is updated with each call to the predict function.
-        self.df_: This attribute stores the DataFrame used in the prediction calculations. It is updated with new predictions each time the predict function is called.
+            Attributes:
+                self.optimum_: Stores the optimum value calculated during the prediction process. It is updated with each call to the predict function.
+                self.df_: Stores the DataFrame used in the prediction calculations. It is updated with new predictions each time the predict function is called.
 
-        Parameters:
-            qtd (int): Number of future events to be calculated.
+            Parameters:
+                qtd (int): Number of future events to be calculated.
+                events_in_the_future_tense (int, optional): Number of events to be considered in the future. Default is 0.
+                best_prediction (bool, optional): If True, the method generates 100,000 random series and selects the series with the lowest MSE, returning an average combination of these series. This process is much slower than the original modeling. If False, it returns the best quantile.
 
-        Returns:
-            (DataFrame): DataFrame containing the predictions with lower quartile (2.5%), upper quartile (95%), and the mean of the quartiles.
+            Returns:
+                DataFrame: DataFrame containing predictions with the lower quartile (2.5%), upper quartile (95%), and the mean of the quartiles.
 
-        Examples:
-            >>> failures = [0.2, 1, 5, 7, 89, 21, 12]
-            >>> model = wgrp_model()
-            >>> model.fit(failures, type='numeric', time_unit='minutes')
-            >>> predictions = model.predict(3)
-            alpha = 1.1910974925051054
-            beta = 0.41123404255463386
-            q = 1
-        """
-        predictions, self.optimum_, self.df_, self.parameters = pred(
-            qtd, list(self.mle_objs_), list(self.TBEs_), quantile, events_in_the_future_tense
-        )
-        self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events']
-        return predictions['dataframe'][['Intervention', 'Mean']]
+            Examples:
+                >>> failures = [0.2, 1, 5, 7, 89, 21, 12]
+                >>> model = wgrp_model()
+                >>> model.fit(failures, type='numeric', time_unit='minutes')
+                >>> predictions = model.predict(3)
+                alpha = 1.1910974925051054
+                beta = 0.41123404255463386
+                q = 1
+            """
+
+            predictions, self.optimum_, self.df_, self.parameters = _pred(
+                qtd, list(self.mle_objs_), list(self.TBEs_), events_in_the_future_tense, best_prediction
+            )
+            self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events'], predictions['dataframe']['best_prediction']
+            return predictions['dataframe'][['Intervention', 'Mean']]

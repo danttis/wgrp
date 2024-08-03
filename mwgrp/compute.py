@@ -52,7 +52,7 @@ def cumulative_forecast_times(
     conditional_means=None,
     parameters=None,
     probability_of_failure=0,
-    quantile=0.1
+    best_prediction=False
 ):
     quantiles = [0.975, 0.025]
     percentis = [i/100 for i in range(1, 100)]
@@ -254,6 +254,45 @@ def cumulative_forecast_times(
                 best_quantile = quantile
         
         nql  = np.percentile(cum_bs, best_quantile * 100, axis=0)
+        if best_prediction:
+            mse_serie1 = float('inf')  # Usar infinito positivo para garantir que qualquer MSE inicial seja menor
+            mse_serie2 = float('inf')
+            mse_serie3 = float('inf')
+            
+            best_serie1 = None
+            best_serie2 = None
+            best_serie3 = None
+            
+            for i in range(bootstrap_sample.shape[0]):
+                rando_serie = accumulate_values(bootstrap_sample[i, :])
+                mse = mean_squared_error(real_serie, rando_serie[:len(real_serie)])  
+                
+                if mse < mse_serie1:
+                    best_serie3 = best_serie2
+                    mse_serie3 = mse_serie2
+                    
+                    best_serie2 = best_serie1
+                    mse_serie2 = mse_serie1
+                    
+                    best_serie1 = rando_serie
+                    mse_serie1 = mse
+                elif mse < mse_serie2:
+                    best_serie3 = best_serie2
+                    mse_serie3 = mse_serie2
+                    
+                    best_serie2 = rando_serie
+                    mse_serie2 = mse
+                elif mse < mse_serie3:
+                    best_serie3 = rando_serie
+                    mse_serie3 = mse
+
+            length = min(len(best_serie1), len(best_serie2), len(best_serie3))
+            list_best_prediction = [(best_serie1[i] + best_serie2[i] + best_serie3[i]) / 3 for i in range(length)]
+            # list_boosting = [(best_serie1[i] + best_serie2[i]) / 2 for i in range(length)]
+        else:
+            list_best_prediction = nql.tolist() if nql is not None else None
+
+
     res = {
         'eventsInTheFutureTense': events_in_the_future_tense,
         'cumTimes': cum_x.tolist() if cum_x is not None else None,
@@ -270,7 +309,8 @@ def cumulative_forecast_times(
         'upperBound': qu.tolist() if qu is not None else None,
         'centralBound': qc.tolist() if qc is not None else None,
         'newQuantile': nql.tolist() if nql is not None else None,
-        'inicialTime': real_serie[0]
+        'inicialTime': real_serie[0],
+        'best_prediction' : list_best_prediction
     }
 
     return res
@@ -351,15 +391,18 @@ def compute_forecasting_table(
     new = [
         round(value + initial_time, 2) for value in forecasting['newQuantile']
     ]
+    list_best_prediction = [
+        round(value + initial_time, 2) for value in forecasting['best_prediction']
+    ] 
 
     ret = pd.DataFrame(
         {
             'Intervention': intervention,
             'Quantile_2.5': lower,
-            #'Quantile_20': pib,
             'Mean': mean,
             'Quantile_97.5': upper ,
-            'newQuantile': new
+            'newQuantile': new,
+            'best_prediction' : list_best_prediction
         }
     )
 
