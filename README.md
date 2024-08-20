@@ -1,6 +1,6 @@
 # MESOR WGRP - PACKAGE
 
-The `MWGRP` package is a data science tool aimed at analyzing widespread renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows you to study the behavior of systems that suffer some type of interference after certain occurrences. Although generally used for physical systems, WGRP can be applied to any system with these characteristics.
+The `MWGRP` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which preventive and corrective events might arise.
 
 ### Application Examples
 
@@ -33,11 +33,11 @@ from mwgrp.model import wgrp_model
 # Initialize the model
 model = wgrp_model()
 
-# Example of failure data (time between failures)
-failures = [1, 2, 5]
+# Example of failure data (time between failures - TBFs)
+TBFs = [1, 2, 5]
 
 # Fit the model to crash data
-model.fit(faults) # See the function documentation for supported data types
+model.fit(TBFs) # See the function documentation for supported data types
 
 # Make predictions
 predict = model.predict(1)
