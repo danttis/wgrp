@@ -48,4 +48,4 @@ predict = model.predict(1)
 ### Additional Notes
 
 - Be sure to consult the full documentation for additional details on the parameters and data types supported by the functions.
-- For more examples and advanced usage, see the Jupyter notebook available in the GitHub repository.
+- For more examples and advanced usage, see the [Jupyter notebook](Example_of_use.ipynb) available in the GitHub repository.
