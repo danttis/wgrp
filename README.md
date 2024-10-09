@@ -1,11 +1,14 @@
 # MESOR WGRP - PACKAGE
 
-The `MWGRP` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which preventive and corrective events might arise.
+The `MWGRP` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which interventions (e.g. preventive and corrective maintenance) might arise.
 
 ### Application Examples
 
-- **Equipment Breakdown**: After a few breaks, the system tends to weaken. It is possible to model and predict future breakdown behavior.
-- **Decrease in a Company's Shares**: If a company presents significant drops, even at random intervals, these drops can explain its future behavior.
+- **Production Systems Breakdowns**: After registering when a few corrective and preventive interventions occurs, the  times between these interventions can be modeled via WGRP. It makes possible to evaluate the quality of the interventions as well as to predict when new interventions will be demanded.  Further, one can compare the performance of a number of systems via the respective WGRP models [[2]](https://www.sciencedirect.com/science/article/abs/pii/S0951832018308391).
+
+- **Decrease in the value of a Company's Shares**: If a company presents relevant drops through the time, the times between drops can be modeled and thus forecasted via WGRP. Further, one can compare the finance performance of a number of companies via the respective WGRP models. 
+
+- **Natural Catastrophic Events**: In the face of the history of when previous catastrophic events have occurred, one can model and forecast when new catastrophic events might occur. It is also possible to compare the natural condition between territories. 
 
 ## How to use
 
