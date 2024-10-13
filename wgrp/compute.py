@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_squared_error, r2_score
 
-from mwgrp.base_functions import Parameters
-from mwgrp.wgrp_functions import ic_wgrp, qwgrp
+from wgrp.base_functions import Parameters
+from wgrp.wgrp_functions import ic_wgrp, qwgrp
 
 FORMALISM = Parameters().FORMALISM
 

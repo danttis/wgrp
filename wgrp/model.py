@@ -1,8 +1,8 @@
 import numpy as np
 
-from mwgrp.compute import *
-from mwgrp.getcomputer import *
-from mwgrp.moments import sample_conditional_moments
+from wgrp.compute import *
+from wgrp.getcomputer import *
+from wgrp.moments import sample_conditional_moments
 
 
 def _fit(data, type='date', time_unit='days', cumulative=False):

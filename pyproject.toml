@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "mwgrp"
+name = "wgrp"
 version = "0.1.0"
 description = ""
 license = "APACHE 2.0"
@@ -53,5 +53,5 @@ line_length = 120
 [tool.taskipy.tasks]
 lint = "blue --check --diff . && isort --check --diff ."
 docs = "mkdocs serve"
-test =  "pytest -s -x --cov=mwgrp -vv"
+test =  "pytest -s -x --cov=wgrp -vv"
 post_test = "coverage html"

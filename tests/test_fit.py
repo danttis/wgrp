@@ -1,4 +1,4 @@
-from mwgrp.model import wgrp_model
+from wgrp.model import wgrp_model
 
 random_values = [10, 12, 15, 4, 56, 12, 22, 13]
 

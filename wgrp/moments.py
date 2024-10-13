@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.special import gamma, gammaincc
 
-from mwgrp.virtual_ages import virtual_age
-from mwgrp.wgrp_functions import pwgrp
+from wgrp.virtual_ages import virtual_age
+from wgrp.wgrp_functions import pwgrp
 
 
 def conditional_moments(parameters, v):

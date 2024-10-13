@@ -1,9 +1,9 @@
 import numpy as np
 
-from mwgrp.base_functions import Parameters
-from mwgrp.r_functions import *
+from wgrp.base_functions import Parameters
+from wgrp.r_functions import *
 
-from mwgrp.virtual_ages import get_sample_virtual_ages, virtual_age
+from wgrp.virtual_ages import get_sample_virtual_ages, virtual_age
 
 
 def ic_wgrp(optimum_obj: dict, x) -> dict:

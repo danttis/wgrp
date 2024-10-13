@@ -1,7 +1,7 @@
-site_name: MWGRP Package
+site_name: WGRP Package
 
 repo_url : https://github.com/danttis/wgrp
-repo_name : mesor/wgrp
+repo_name : danttis/wgrp
 edit_uri : tree/master/docs
 
 
@@ -39,4 +39,4 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [mwgrp]
+          paths: [wgrp]

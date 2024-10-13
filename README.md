@@ -1,6 +1,6 @@
 # MESOR WGRP - PACKAGE
 
-The `MWGRP` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which interventions (e.g. preventive and corrective maintenance) might arise.
+The `wgrp` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which interventions (e.g. preventive and corrective maintenance) might arise.
 
 ### Application Examples
 
@@ -12,14 +12,14 @@ The `MWGRP` package is a data science tool aimed at analyzing widespread general
 
 ## How to use
 
-A Jupyter notebook with usage examples of most functions is available on [GitHub](https://github.com/danttis/mwgrp).
+A Jupyter notebook with usage examples of most functions is available on [GitHub](https://github.com/danttis/wgrp).
 
 ### Package Installation
 
 To install the package, use the following command:
 
 ```bash
-pip install mwgrp
+pip install wgrp
 ```
 
 ### Import and Use of the `wgrp_model` Class
@@ -27,7 +27,7 @@ pip install mwgrp
 The `wgrp_model` class has `fit` and `predict` functions, which are similar to those available in other machine learning packages for ease of use.
 
 ```python
-from mwgrp.model import wgrp_model
+from wgrp.model import wgrp_model
 ```
 
 ### Starting the Model with your Database

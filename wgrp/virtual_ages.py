@@ -1,6 +1,6 @@
 import numpy as np
 
-from mwgrp.r_functions import rep
+from wgrp.r_functions import rep
 
 
 def virtual_age(propagation, q, current_virtual_age=0, x=0) -> dict:

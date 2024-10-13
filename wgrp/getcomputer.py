@@ -1,5 +1,5 @@
-from mwgrp.base_functions import Get, Parameters
-from mwgrp.mle_wgrp import MleWgrp
+from wgrp.base_functions import Get, Parameters
+from wgrp.mle_wgrp import MleWgrp
 
 
 def getMLE_objs(timesBetweenInterventions, interventionsTypes, b=1):

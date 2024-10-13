@@ -5,9 +5,9 @@ from contextlib import contextmanager
 import numpy as np
 from pyswarm import pso
 
-from mwgrp.base_functions import *
-from mwgrp.virtual_ages import get_virtual_ages_and_a
-from mwgrp.wgrp_functions import lwgrp
+from wgrp.base_functions import *
+from wgrp.virtual_ages import get_virtual_ages_and_a
+from wgrp.wgrp_functions import lwgrp
 
 
 class MleWgrp:
