@@ -5,11 +5,21 @@ from wgrp.getcomputer import *
 from wgrp.moments import sample_conditional_moments
 
 
-def _fit(data, type='date', time_unit='days', cumulative=False):
-    if type not in ['date', 'numeric']:
-        raise ValueError("Invalid type. Expected 'date' or 'numeric'.")
+def _fit(data, time_unit='days', cumulative=False):
+    if isinstance(data, pd.DataFrame):
+        data = data.squeeze()  
 
+    if pd.api.types.is_numeric_dtype(data) or all(isinstance(x, (int, float)) for x in data):
+        type = 'numeric'
+    else:
+        try:
+            data = pd.to_datetime(data)
+            type = 'date'
+        except (ValueError, TypeError):
+            raise ValueError("Os dados não são numéricos nem datas válidas.")
+    
     np.random.seed(0)
+
     if type == 'date':
         newData_i = append_times_between_events_from_date_events(
             data, time_unit=time_unit
@@ -32,10 +42,8 @@ def _fit(data, type='date', time_unit='days', cumulative=False):
         interventionsTypes=event_types,
         b=1,
     )
-    mle_objs = mle_objs
 
     return mle_objs, TBEs
-
 
 PROPAGATION = Parameters().PROPAGATION
 get_parameters = Get().get_parameters
@@ -141,13 +149,6 @@ class wgrp_model:
                 `event_type` (assuming values like `Preventive` or `Corrective`, for instance). One can 
                 also use a list with the TBEs (`numeric` values); in this case, the nature of the interventions is not
                 taken into account.
-            type (str):
-                Type of the provided data.  Default is `date`. If `type = date`, the `data` object should be a DataFrame 
-                with a column named `date` containing event dates and other column named `event_type` with the respective
-                  intervention types. If `type = numeric`, the `data` object should be a list of TBEs or times to occur the
-                  events (TTOs); in this case, the nature of the interventions is not taken into account. If 
-                  `type = numeric`, there are two options for `data": TBEs if `cumulative = False` (e.g. 
-                  [2, 4, 3, 5]), or TTOs if `cumulative = True` (e.g. [2, 6, 9, 14]).
             time_unit (str):
                 Time unit for analyzing intervals between interventions. It can be 'weeks', 'days', 'hours', 
                 'minutes', 'seconds', 'microseconds', 'milliseconds'. Default is 'days'.
@@ -164,7 +165,7 @@ class wgrp_model:
             {'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'virtualAges': [np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)], 'optimum': array([0.62847203]), 'parameters': {'nSamples': 0, 'nInterventions': None, 'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'reliabilities': None, 'previousVirtualAge': 0, 'interventionsTypes': None, 'formalism': 'RP', 'cumulativeFailureCount': None, 'timesPredictFailures': None, 'nIntervetionsReal': None, 'bBounds': {'min': 1e-100, 'max': 5}, 'qBounds': {'min': 0, 'max': 1}}, 'optimum_value': -26.12961862148702}
         """
         # Calls the fit_f method of Fit_grp to fit the model
-        self.mle_objs_, self.TBEs_ = _fit(data, type, time_unit, cumulative)
+        self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative)
 
     def predict(self, qtd=1, events_in_the_future_tense=0, best_prediction=False):
             """
