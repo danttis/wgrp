@@ -23,6 +23,7 @@ pandas = "^2.2.2"
 pyswarm = "^0.6"
 scipy = "^1.14.0"
 scikit-learn = "^1.5.1"
+matplotlib = "^3.9.2"
 
 
 [tool.poetry.group.dev.dependencies]

@@ -1,5 +1,5 @@
 import numpy as np
-
+import matplotlib.pyplot as plt
 from wgrp.compute import *
 from wgrp.getcomputer import *
 from wgrp.moments import sample_conditional_moments
@@ -13,7 +13,7 @@ def _fit(data, time_unit='days', cumulative=False, random_state=0):
         type = 'numeric'
     else:
         try:
-            data = pd.to_datetime(data)
+            #data = pd.to_datetime(data)
             type = 'date'
         except (ValueError, TypeError):
             raise ValueError("Invalid type. Expected 'date' or 'numeric'.")
@@ -51,7 +51,7 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, best_prediction=False):
+def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, random_series=10000, top_n_series=3):
     df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
@@ -73,16 +73,12 @@ def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, best_prediction=F
     tPredictFailures =  events_in_the_future_tense  # globals()['failuresInTime']
     m = nEventsAheadToPredict
     
-    if best_prediction:
-        nSamples = 100000
-    else: 
-        nSamples=1000
 
     pmPropagations = np.concatenate(
         (optimum['propagations'], np.repeat(PROPAGATION['KijimaII'], m))
     )
     parameters = get_parameters(
-        nSamples=nSamples,
+        nSamples=random_series,
         nInterventions=(n + m),
         a=optimum['a'],
         b=optimum['b'],
@@ -102,7 +98,7 @@ def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, best_prediction=F
         conditional_means=theoreticalMoments,
         parameters=parameters,
         probability_of_failure=qtd,
-        best_prediction=best_prediction
+        top_n_series=top_n_series
     )   # x=None, bootstrap_sample=None, conditional_means=None, parameters=None, probability_of_failure=0, quantile=0.1
 
     forecasting_final = compute_forecasting_table(forecasting, initial_time=10)
@@ -131,12 +127,10 @@ class wgrp_model:
         self.mle_objs_ = None
         self.optimum_ = None
         self.df_ = None
-        self.quantile_s = None
-        self.quantile_i = None
-        self.quantile_n = None
+        self.predictions = None
+        self.time_unit = None
         self.parameters = None
         self.events_in_the_future_tense = None
-        self.best_prediction = None
 
     def fit(self, data, time_unit='days', cumulative=False, random_state=0):
         """
@@ -155,7 +149,7 @@ class wgrp_model:
                 'minutes', 'seconds', 'microseconds', 'milliseconds'. Default is 'days'.
             cumulative (bool):
                 Indicates if the provided numeric times are cumulative. Default is `False`. there are two 
-                options for `data": TBEs if `cumulative = False` (e.g. [2, 4, 3, 5]), or TTOs if 
+                options for `data": TBEs if `cumulative = False` (e.g. [2, 4, 3, 5]), or  
                 `cumulative = True` (e.g. [2, 6, 9, 14]). 
 
         Examples:
@@ -166,9 +160,10 @@ class wgrp_model:
             {'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'virtualAges': [np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)], 'optimum': array([0.62847203]), 'parameters': {'nSamples': 0, 'nInterventions': None, 'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'reliabilities': None, 'previousVirtualAge': 0, 'interventionsTypes': None, 'formalism': 'RP', 'cumulativeFailureCount': None, 'timesPredictFailures': None, 'nIntervetionsReal': None, 'bBounds': {'min': 1e-100, 'max': 5}, 'qBounds': {'min': 0, 'max': 1}}, 'optimum_value': -26.12961862148702}
         """
         # Calls the fit_f method of Fit_grp to fit the model
+        self.time_unit = time_unit
         self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative, random_state)
 
-    def predict(self, qtd=1, events_in_the_future_tense=0, best_prediction=False):
+    def predict(self, qtd=1, events_in_the_future_tense=0, random_series=10000, top_n_series=3):
             """
             Makes future (out-of-sample) forecasts based on the desired number of steps ahead.
 
@@ -182,13 +177,17 @@ class wgrp_model:
                 qtd (int): Number of future events to be calculated.
                 events_in_the_future_tense (int, optional): Number of events to be considered in the future. 
                 Default is 0.
-                best_prediction (bool, optional): If True, the method generates 100,000 random series and 
-                selects the series with the lowest MSE, returning an average combination of these series. 
-                This process is much slower than the original modeling. If False, it returns the best quantile.
+                random_series (int, optional): Specifies the number of random series to be generated for the 
+                prediction process. The default is 10,000. This method generates random series and averages 
+                them to return a more robust prediction. Increasing this number may lead to slower performance 
+                but potentially more accurate results.
+                top_n_series (int, optional): Specifies the number of best series (with the lowest MSE) to be 
+                selected for averaging. The default is 3. The final prediction will be the average of these 
+                top series.
 
             Returns:
                 DataFrame: DataFrame containing predictions with the lower quartile (2.5%), upper quartile (97.5%), 
-                and the mean TTOs.
+                and the mean.
 
             Examples:
                 >>> TBEs = [0.2, 1, 5, 7, 89, 21, 12]
@@ -200,8 +199,81 @@ class wgrp_model:
                 q = 1
             """
 
-            predictions, self.optimum_, self.df_, self.parameters = _pred(
-                qtd, list(self.mle_objs_), list(self.TBEs_), events_in_the_future_tense, best_prediction
+            self.predictions, self.optimum_, self.df_, self.parameters = _pred(
+                qtd, list(self.mle_objs_), list(self.TBEs_), events_in_the_future_tense, random_series, top_n_series
             )
-            self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events'], predictions['dataframe']['best_prediction']
-            return predictions['dataframe'][['Intervention', 'Mean']]
+            #self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events'], predictions['dataframe']['best_prediction']
+            return self.predictions['dataframe']['Mean'].iloc[len(self.TBEs_)-1:]
+    
+    def plot(self, random_series_qtd=10):
+        """
+        Plots a comparison of real series, bootstrapped series, and predicted quantiles with optional random series.
+
+        Parameters:
+            random_series_qtd : int, optional
+                The number of random series to be generated from the bootstrap samples. Default is 10.
+
+        Description:
+            This function generates a plot that displays:
+            - Randomly generated series based on bootstrapped samples.
+            - The observed real series.
+            - Predicted quantiles (upper and lower) and the mean of the WGRP predictions.
+            - The 'best quantile' and the 'best prediction'.
+            - The end of the training data marked with a vertical dashed green line.
+
+        The plot visually compares the actual data with the predictions and quantiles, giving insights into how well 
+        the model fits the observed series.
+        
+        Returns:
+            None: The function displays a matplotlib plot.
+        """
+
+        # Set the number of samples for the bootstrap
+        self.parameters['nSamples'] = random_series_qtd
+
+        # Generate random series using bootstrap sampling
+        random_series = bootstrap_sample(self.parameters)['sample_matrix']
+
+        # Accumulate real series values
+        real_serie = accumulate_values(self.TBEs_)
+
+        # Create a figure and axis for plotting
+        fig, ax = plt.subplots()
+
+        # Plot each random series in gray with a thin line
+        for i in range(random_series.shape[0]):
+            ax.plot(accumulate_values(random_series[i, :]), label=None, color='gray', linewidth=0.5)
+
+        # Plot the predicted upper quantile (97.5%)
+        ax.plot(self.predictions['dataframe']['Quantile_97.5'], label='Theoretical Quantiles', color='black')
+
+        # Plot the predicted mean of the WGRP model
+        ax.plot(self.predictions['dataframe']['Mean'], label='WGRP Mean', color='red')
+
+        # Plot the real observed series in blue
+        ax.plot(real_serie, label='Observed Series', color='blue')
+
+        # Plot the predicted lower quantile (2.5%)
+        ax.plot(self.predictions['dataframe']['Quantile_2.5'], label=None, color='black')
+
+        # Plot the 'best quantile' in orange
+        ax.plot(self.predictions['dataframe']['newQuantile'], label='Best Quantile', color='orange')
+
+        # Plot the 'best prediction' in green
+        ax.plot(self.predictions['dataframe']['best_prediction'], label='Best Prediction', color='green')
+
+        # Mark the end of the training data with a vertical dashed line
+        ax.axvline(x=len(real_serie) - 1, color='green', linestyle='--', label='End of Train Data')
+
+        # Display the legend
+        ax.legend()
+
+        # Set axis labels
+        ax.set_xlabel('Occurrences')
+        ax.set_ylabel(f'Time in {self.time_unit}')
+
+        # Show the plot
+        plt.show()
+
+
+

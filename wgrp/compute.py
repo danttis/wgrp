@@ -52,7 +52,7 @@ def cumulative_forecast_times(
     conditional_means=None,
     parameters=None,
     probability_of_failure=0,
-    best_prediction=False
+    top_n_series=3
 ):
     quantiles = [0.975, 0.025]
     percentis = [i/100 for i in range(1, 100)]
@@ -254,43 +254,38 @@ def cumulative_forecast_times(
                 best_quantile = quantile
         
         nql  = np.percentile(cum_bs, best_quantile * 100, axis=0)
-        if best_prediction:
-            mse_serie1 = float('inf')  # Usar infinito positivo para garantir que qualquer MSE inicial seja menor
-            mse_serie2 = float('inf')
-            mse_serie3 = float('inf')
-            
-            best_serie1 = None
-            best_serie2 = None
-            best_serie3 = None
-            
-            for i in range(bootstrap_sample.shape[0]):
-                rando_serie = accumulate_values(bootstrap_sample[i, :])
-                mse = mean_squared_error(real_serie, rando_serie[:len(real_serie)])  
-                
-                if mse < mse_serie1:
-                    best_serie3 = best_serie2
-                    mse_serie3 = mse_serie2
-                    
-                    best_serie2 = best_serie1
-                    mse_serie2 = mse_serie1
-                    
-                    best_serie1 = rando_serie
-                    mse_serie1 = mse
-                elif mse < mse_serie2:
-                    best_serie3 = best_serie2
-                    mse_serie3 = mse_serie2
-                    
-                    best_serie2 = rando_serie
-                    mse_serie2 = mse
-                elif mse < mse_serie3:
-                    best_serie3 = rando_serie
-                    mse_serie3 = mse
+        
+        
+        # Initialize lists to store the best series and their respective MSEs
+        best_series = []
+        mse_series = []
 
-            length = min(len(best_serie1), len(best_serie2), len(best_serie3))
-            list_best_prediction = [(best_serie1[i] + best_serie2[i] + best_serie3[i]) / 3 for i in range(length)]
-            # list_boosting = [(best_serie1[i] + best_serie2[i]) / 2 for i in range(length)]
-        else:
-            list_best_prediction = nql.tolist() if nql is not None else None
+        # For each series generated from the bootstrap sample
+        for i in range(bootstrap_sample.shape[0]):
+            rando_serie = accumulate_values(bootstrap_sample[i, :])
+            
+            # Calculate the MSE by comparing the generated series with the real series
+            mse = mean_squared_error(real_serie, rando_serie[:len(real_serie)])
+            
+            # Add the series and MSE to the best series list if there's still space
+            if len(mse_series) < top_n_series:
+                mse_series.append(mse)
+                best_series.append(rando_serie)
+            else:
+                # Check if the new MSE is smaller than the largest MSE in the list (worst of the best series)
+                max_mse_index = mse_series.index(max(mse_series))
+                if mse < mse_series[max_mse_index]:
+                    # Replace the series with the largest MSE with the new series
+                    mse_series[max_mse_index] = mse
+                    best_series[max_mse_index] = rando_serie
+
+        # Calculate the minimum length among all the best series to avoid index out of range issues
+        min_length = min([len(serie) for serie in best_series])
+
+        # Calculate the point-by-point average among the best series
+        list_best_prediction = [sum(best_series[j][i] for j in range(top_n_series)) / top_n_series for i in range(min_length)]
+
+        
 
 
     res = {
