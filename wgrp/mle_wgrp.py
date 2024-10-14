@@ -33,11 +33,12 @@ class MleWgrp:
         PLoS ONE, 10(7), e0133772. https://doi.org/10.1371/journal.pone.0133772
     """
 
-    def __init__(self, x, p_parameters):
+    def __init__(self, x, p_parameters, random_state=0):
         self.x = x
         self.p_parameters = p_parameters
+        self.random_state = random_state
         self.n = len(x)
-        np.random.seed(0)
+        np.random.seed(self.random_state)
         self.FORMALISM = Parameters().FORMALISM
         self.PROPAGATION = Parameters().PROPAGATION
         self.INTERVENTION_TYPE = Parameters().INTERVENTION_TYPE
@@ -166,7 +167,7 @@ class MleWgrp:
 
         with suppress_stdout():
             optimum, value = pso(
-                MleWgrp(self.x, self.p_parameters).objective_function,
+                MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
                 lower,
                 upper,
                 args=(),

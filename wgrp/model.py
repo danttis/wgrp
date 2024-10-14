@@ -5,7 +5,7 @@ from wgrp.getcomputer import *
 from wgrp.moments import sample_conditional_moments
 
 
-def _fit(data, time_unit='days', cumulative=False):
+def _fit(data, time_unit='days', cumulative=False, random_state=0):
     if isinstance(data, pd.DataFrame):
         data = data.squeeze()  
 
@@ -18,7 +18,7 @@ def _fit(data, time_unit='days', cumulative=False):
         except (ValueError, TypeError):
             raise ValueError("Invalid type. Expected 'date' or 'numeric'.")
     
-    np.random.seed(0)
+    np.random.seed(random_state)
 
     if type == 'date':
         newData_i = append_times_between_events_from_date_events(
@@ -41,6 +41,7 @@ def _fit(data, time_unit='days', cumulative=False):
         timesBetweenInterventions=list(TBEs),
         interventionsTypes=event_types,
         b=1,
+        random_state = random_state
     )
 
     return mle_objs, TBEs
@@ -114,7 +115,7 @@ class wgrp_model:
     Although all other functions can be used separately, this class provides two main functions:
 
     - `fit`: Works similarly to many machine learning packages, fitting WGRP models to the times between 
-    events (TBEs) or times to occur events (TTOs) data and returning a DataFrame with the parameters of a 
+    events (TBEs) data and returning a DataFrame with the parameters of a 
     number of WGRP formalisms (i.e. Renew Processes - RP, Non-Homogeneous Poisson Processes - NHPP, Kijima I, 
     Kijima II, and Intervention type-based models). Further, a list with the TBEs is returned.
     - `predict`: Also works similarly to machine learning packages, receiving the number of events for 
@@ -137,7 +138,7 @@ class wgrp_model:
         self.events_in_the_future_tense = None
         self.best_prediction = None
 
-    def fit(self, data, type='date', time_unit='days', cumulative=False):
+    def fit(self, data, time_unit='days', cumulative=False, random_state=0):
         """
         Fits WGRP models to the provided data. Although the function does not return anything explicitly, 
         it computes the `mle_objs_` attribute, a list of Maximum Likelihood Estimation (MLE) objects, and 
@@ -160,12 +161,12 @@ class wgrp_model:
         Examples:
             >>> TBEs = [0.2, 1, 5, 7, 89, 21, 12]
             >>> model = wgrp_model()
-            >>> model.fit(TBEs, type='numeric', time_unit='minutes')
+            >>> model.fit(TBEs, time_unit='minutes')
             >>> model.mle_objs_[0]
             {'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'virtualAges': [np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)], 'optimum': array([0.62847203]), 'parameters': {'nSamples': 0, 'nInterventions': None, 'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'reliabilities': None, 'previousVirtualAge': 0, 'interventionsTypes': None, 'formalism': 'RP', 'cumulativeFailureCount': None, 'timesPredictFailures': None, 'nIntervetionsReal': None, 'bBounds': {'min': 1e-100, 'max': 5}, 'qBounds': {'min': 0, 'max': 1}}, 'optimum_value': -26.12961862148702}
         """
         # Calls the fit_f method of Fit_grp to fit the model
-        self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative)
+        self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative, random_state)
 
     def predict(self, qtd=1, events_in_the_future_tense=0, best_prediction=False):
             """
@@ -192,7 +193,7 @@ class wgrp_model:
             Examples:
                 >>> TBEs = [0.2, 1, 5, 7, 89, 21, 12]
                 >>> model = wgrp_model()
-                >>> model.fit(TBEs, type='numeric', time_unit='minutes')
+                >>> model.fit(TBEs, time_unit='minutes')
                 >>> predictions = model.predict(3)
                 alpha = 1.1910974925051054
                 beta = 0.41123404255463386
