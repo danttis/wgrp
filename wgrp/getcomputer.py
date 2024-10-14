@@ -10,9 +10,6 @@ def getMLE_objs(timesBetweenInterventions, interventionsTypes, b=1, random_state
     x = timesBetweenInterventions
     j = interventionsTypes
 
-    if b != 1:
-        b = b
-
     parameters_RP = get_parameters(b=b, formalism=FORMALISM['RP'])
     # print(parameters_RP)
     optimum_RP = mle_wrgp(x=x, p_parameters=parameters_RP, random_state=random_state).minimization()
