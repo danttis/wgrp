@@ -305,7 +305,8 @@ def cumulative_forecast_times(
         'centralBound': qc.tolist() if qc is not None else None,
         'newQuantile': nql.tolist() if nql is not None else None,
         'inicialTime': real_serie[0],
-        'best_prediction' : list_best_prediction
+        'best_prediction' : list_best_prediction,
+        'best_quantile' : best_quantile
     }
 
     return res
@@ -401,7 +402,7 @@ def compute_forecasting_table(
         }
     )
 
-    return {'dataframe': ret, 'qtd_events': forecasting['eventsInTheFutureTense']}
+    return {'dataframe': ret, 'qtd_events': forecasting['eventsInTheFutureTense'], 'best_quantile': forecasting['best_quantile'] }
 
 
 def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):

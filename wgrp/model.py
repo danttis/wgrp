@@ -129,7 +129,7 @@ class wgrp_model:
         self.predictions = None
         self.time_unit = None
         self.parameters = None
-        self.events_in_the_future_tense = None
+        self.n_steps_ahead = None
 
     def fit(self, data, time_unit='days', cumulative=False, random_state=0):
         """
@@ -236,6 +236,7 @@ class wgrp_model:
         # Accumulate real series values
         real_serie = accumulate_values(self.TBEs_)
 
+        best_quantile = self.predictions['best_quantile']
         # Create a figure and axis for plotting
         fig, ax = plt.subplots()
 
@@ -256,7 +257,7 @@ class wgrp_model:
         ax.plot(self.predictions['dataframe']['Quantile_2.5'], label=None, color='black')
 
         # Plot the 'best quantile' in orange
-        ax.plot(self.predictions['dataframe']['newQuantile'], label='Best Quantile', color='orange')
+        ax.plot(self.predictions['dataframe']['newQuantile'], label=f'Best Quantile {best_quantile}', color='orange')
 
         # Plot the 'best prediction' in green
         ax.plot(self.predictions['dataframe']['best_prediction'], label='Best Prediction', color='green')
