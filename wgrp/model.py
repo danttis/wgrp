@@ -16,7 +16,7 @@ def _fit(data, time_unit='days', cumulative=False):
             data = pd.to_datetime(data)
             type = 'date'
         except (ValueError, TypeError):
-            raise ValueError("Os dados não são numéricos nem datas válidas.")
+            raise ValueError("Invalid type. Expected 'date' or 'numeric'.")
     
     np.random.seed(0)
 
