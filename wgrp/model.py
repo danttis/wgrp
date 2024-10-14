@@ -51,11 +51,11 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, random_series=10000, top_n_series=3):
+def _pred(qtd, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_series=3):
     df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
-    nEventsAheadToPredict = qtd
+    
     # probabilityOfFailure = 5   # revisar
     # globals()['quantile']
     n = len(TBEs)
@@ -70,8 +70,7 @@ def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, random_series=100
         optimum['propagations'] = np.ones(n)
 
     cF = np.sum(TBEs)
-    tPredictFailures =  events_in_the_future_tense  # globals()['failuresInTime']
-    m = nEventsAheadToPredict
+    m = qtd
     
 
     pmPropagations = np.concatenate(
@@ -85,7 +84,7 @@ def _pred(qtd, mle_objs, TBEs, events_in_the_future_tense = 0, random_series=100
         q=optimum['q'],
         propagations=pmPropagations,
         cumulativeFailureCount=cF,
-        timesPredictFailures=tPredictFailures,
+        timesPredictFailures=n_steps_ahead,
         nIntervetionsReal=n,
     )
    
@@ -163,7 +162,7 @@ class wgrp_model:
         self.time_unit = time_unit
         self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative, random_state)
 
-    def predict(self, qtd=1, events_in_the_future_tense=0, random_series=10000, top_n_series=3):
+    def predict(self, qtd=1, n_steps_ahead=0, random_series=10000, top_n_series=3):
             """
             Makes future (out-of-sample) forecasts based on the desired number of steps ahead.
 
@@ -175,7 +174,7 @@ class wgrp_model:
 
             Parameters:
                 qtd (int): Number of future events to be calculated.
-                events_in_the_future_tense (int, optional): Number of events to be considered in the future. 
+                n_steps_ahead (int, optional): Number of events to be considered in the future. 
                 Default is 0.
                 random_series (int, optional): Specifies the number of random series to be generated for the 
                 prediction process. The default is 10,000. This method generates random series and averages 
@@ -200,7 +199,7 @@ class wgrp_model:
             """
 
             self.predictions, self.optimum_, self.df_, self.parameters = _pred(
-                qtd, list(self.mle_objs_), list(self.TBEs_), events_in_the_future_tense, random_series, top_n_series
+                qtd, list(self.mle_objs_), list(self.TBEs_), n_steps_ahead, random_series, top_n_series
             )
             #self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events'], predictions['dataframe']['best_prediction']
             return self.predictions['dataframe']['Mean'].iloc[len(self.TBEs_)-1:]
