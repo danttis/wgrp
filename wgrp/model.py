@@ -5,7 +5,7 @@ from wgrp.getcomputer import *
 from wgrp.moments import sample_conditional_moments
 
 
-def _fit(data, time_unit='days', cumulative=False, random_state=0):
+def _fit(data, time_unit='days', cumulative=False, random_state=0, optimizer="ps"):
     if isinstance(data, pd.DataFrame):
         data = data.squeeze()  
 
@@ -21,7 +21,7 @@ def _fit(data, time_unit='days', cumulative=False, random_state=0):
     np.random.seed(random_state)
 
     if type == 'date':
-        newData_i = append_times_between_events_from_date_events(
+        newData_i = add_time_diffs(
             data, time_unit=time_unit
         )
         TBEs = newData_i['TBE']
@@ -41,7 +41,8 @@ def _fit(data, time_unit='days', cumulative=False, random_state=0):
         timesBetweenInterventions=list(TBEs),
         interventionsTypes=event_types,
         b=1,
-        random_state = random_state
+        random_state = random_state,
+        optimizer=optimizer
     )
 
     return mle_objs, TBEs
@@ -51,7 +52,7 @@ get_parameters = Get().get_parameters
 get_optim = Get().get_optimum
 
 
-def _pred(qtd, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_series=3):
+def _pred(n_forecasts, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_series=3):
     df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
@@ -70,7 +71,7 @@ def _pred(qtd, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_ser
         optimum['propagations'] = np.ones(n)
 
     cF = np.sum(TBEs)
-    m = qtd
+    m = n_forecasts
     
 
     pmPropagations = np.concatenate(
@@ -96,7 +97,7 @@ def _pred(qtd, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_ser
         bootstrap_sample=bSample,
         conditional_means=theoreticalMoments,
         parameters=parameters,
-        probability_of_failure=qtd,
+        probability_of_failure=n_forecasts,
         top_n_series=top_n_series
     )   # x=None, bootstrap_sample=None, conditional_means=None, parameters=None, probability_of_failure=0, quantile=0.1
 
@@ -131,7 +132,7 @@ class wgrp_model:
         self.parameters = None
         self.n_steps_ahead = None
 
-    def fit(self, data, time_unit='days', cumulative=False, random_state=0):
+    def fit(self, data, time_unit='days', cumulative=False, random_state=0, optimizer="ps"):
         """
         Fits WGRP models to the provided data. Although the function does not return anything explicitly, 
         it computes the `mle_objs_` attribute, a list of Maximum Likelihood Estimation (MLE) objects, and 
@@ -150,19 +151,21 @@ class wgrp_model:
                 Indicates if the provided numeric times are cumulative. Default is `False`. there are two 
                 options for `data": TBEs if `cumulative = False` (e.g. [2, 4, 3, 5]), or  
                 `cumulative = True` (e.g. [2, 6, 9, 14]). 
+            optimizer (str): 
+                Selects the type of optimizer to use, either "ps" for particle swarm (default) or "sa" for simulated annealing.
+
+
 
         Examples:
             >>> TBEs = [0.2, 1, 5, 7, 89, 21, 12]
             >>> model = wgrp_model()
             >>> model.fit(TBEs, time_unit='minutes')
-            >>> model.mle_objs_[0]
-            {'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'virtualAges': [np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)], 'optimum': array([0.62847203]), 'parameters': {'nSamples': 0, 'nInterventions': None, 'a': np.float64(13.449147109006473), 'b': np.float64(0.6284720253731791), 'q': 0, 'propagations': None, 'reliabilities': None, 'previousVirtualAge': 0, 'interventionsTypes': None, 'formalism': 'RP', 'cumulativeFailureCount': None, 'timesPredictFailures': None, 'nIntervetionsReal': None, 'bBounds': {'min': 1e-100, 'max': 5}, 'qBounds': {'min': 0, 'max': 1}}, 'optimum_value': -26.12961862148702}
         """
         # Calls the fit_f method of Fit_grp to fit the model
         self.time_unit = time_unit
-        self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative, random_state)
+        self.mle_objs_, self.TBEs_ = _fit(data, time_unit, cumulative, random_state, optimizer)
 
-    def predict(self, qtd=1, n_steps_ahead=0, random_series=10000, top_n_series=3):
+    def predict(self, n_forecasts=1, n_steps_ahead=0, random_series=10000, top_n_series=3):
             """
             Makes future (out-of-sample) forecasts based on the desired number of steps ahead.
 
@@ -173,14 +176,14 @@ class wgrp_model:
                 predictions each time the predict function is called.
 
             Parameters:
-                qtd (int): Number of future events to be calculated.
+                n_forecasts (int): Number of future events to be calculated.
                 n_steps_ahead (int, optional): Number of events to be considered in the future. 
                 Default is 0.
                 random_series (int, optional): Specifies the number of random series to be generated for the 
                 prediction process. The default is 10,000. This method generates random series and averages 
                 them to return a more robust prediction. Increasing this number may lead to slower performance 
                 but potentially more accurate results.
-                top_n_series (int, optional): Specifies the number of best series (with the lowest MSE) to be 
+                top_n_series (int, optional): Specifies the number of best series (with the lowest RMSE) to be 
                 selected for averaging. The default is 3. The final prediction will be the average of these 
                 top series.
 
@@ -193,23 +196,23 @@ class wgrp_model:
                 >>> model = wgrp_model()
                 >>> model.fit(TBEs, time_unit='minutes')
                 >>> predictions = model.predict(3)
-                alpha = 1.1910974925051054
-                beta = 0.41123404255463386
+                alpha = 1.1910044773056132
+                beta = 0.41122725565015567
                 q = 1
             """
 
             self.predictions, self.optimum_, self.df_, self.parameters = _pred(
-                qtd, list(self.mle_objs_), list(self.TBEs_), n_steps_ahead, random_series, top_n_series
+                n_forecasts, list(self.mle_objs_), list(self.TBEs_), n_steps_ahead, random_series, top_n_series
             )
-            #self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['qtd_events'], predictions['dataframe']['best_prediction']
+            #self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['n_forecasts_events'], predictions['dataframe']['best_prediction']
             return self.predictions['dataframe']['Mean'].iloc[len(self.TBEs_)-1:]
     
-    def plot(self, random_series_qtd=10):
+    def plot(self, n_random_series=10):
         """
         Plots a comparison of real series, bootstrapped series, and predicted quantiles with optional random series.
 
         Parameters:
-            random_series_qtd : int, optional
+            n_random_series : int, optional
                 The number of random series to be generated from the bootstrap samples. Default is 10.
 
         Description:
@@ -228,7 +231,7 @@ class wgrp_model:
         """
 
         # Set the number of samples for the bootstrap
-        self.parameters['nSamples'] = random_series_qtd
+        self.parameters['nSamples'] = n_random_series
 
         # Generate random series using bootstrap sampling
         random_series = bootstrap_sample(self.parameters)['sample_matrix']

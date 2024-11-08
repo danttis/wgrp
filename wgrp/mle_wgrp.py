@@ -9,6 +9,7 @@ from wgrp.base_functions import *
 from wgrp.virtual_ages import get_virtual_ages_and_a
 from wgrp.wgrp_functions import lwgrp
 
+from scipy import optimize
 
 class MleWgrp:
 
@@ -33,10 +34,11 @@ class MleWgrp:
         PLoS ONE, 10(7), e0133772. https://doi.org/10.1371/journal.pone.0133772
     """
 
-    def __init__(self, x, p_parameters, random_state=0):
+    def __init__(self, x, p_parameters, random_state=0, optimizer="ps"):
         self.x = x
         self.p_parameters = p_parameters
         self.random_state = random_state
+        self.optimizer = optimizer
         self.n = len(x)
         np.random.seed(self.random_state)
         self.FORMALISM = Parameters().FORMALISM
@@ -100,19 +102,6 @@ class MleWgrp:
                 - 'virtualAges': The computed virtual ages.
                 - 'optimum': The optimal values found by the optimization process.
                 - 'parameters': The input parameters `p_parameters` used for the optimization.
-
-        Examples:
-            >>> x_data = np.array([1, 2, 3, 4, 5])
-            >>> p_params = {
-            ...     'formalism': Parameters().FORMALISM['RP'],
-            ...     'bBounds': {'min': 0.1, 'max': 10},
-            ...     'qBounds': {'min': 0, 'max': 1},
-            ...     'q': 0.5,
-            ...     'interventionsTypes': Parameters().INTERVENTION_TYPE['PM']
-            ...     }
-            >>> optimal_params = MleWgrp(x_data, p_params).minimization()
-            >>> print(optimal_params)
-            {'a': np.float64(3.394283556862431), 'b': np.float64(2.2937784293850894), 'q': 0, 'propagations': None, 'virtualAges': [np.int64(0), np.int64(0), np.int64(0), np.int64(0), np.int64(0)], 'optimum': array([2.29377843]), 'parameters': {'formalism': 'RP', 'bBounds': {'min': 0.1, 'max': 10}, 'qBounds': {'min': 0, 'max': 1}, 'q': 0, 'interventionsTypes': 'Preventive', 'a': np.float64(3.394283556862431), 'b': np.float64(2.2937784293850894), 'propagations': None}, 'optimum_value': -8.671093799832938}
         """
         b = 1
         q = 0
@@ -164,30 +153,88 @@ class MleWgrp:
                     yield
                 finally:
                     sys.stdout = old_stdout
+  
+        
+        bounds = list(zip(lower, upper))
 
-        with suppress_stdout():
-            optimum, value = pso(
-                MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
-                lower,
-                upper,
-                args=(),
-                **options
-            )
+        # with suppress_stdout():
+        #     optimum = optimize.dual_annealing(
+        #         func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
+        #         bounds=bounds,           
+        #         maxiter=10000,
+        #         initial_temp=40,
+        #         maxfun=3000,
+        #         no_local_search=True,
+        #         callback=None            
+        #     ).x
+        # # with suppress_stdout():
+        # #     optimum, value = optimize.dual_annealing(func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,bounds=(lower,
+        # #         upper), maxiter=10000, initial_temp=40, maxfun = 3000, no_local_search=True, callback=False
+        # #     )
 
-        # # Optimization function call (PSO from pyswarm package)
-        # optimum, value = pso(
-        #     MleWgrp(self.x, self.p_parameters).objective_function,
-        #     lower,
-        #     upper,
-        #     args=(),
-        #     **options
-        # )
+        # # # # Optimization function call (PSO from pyswarm package)
+        # # # optimum, value = pso(
+        # # #     MleWgrp(self.x, self.p_parameters).objective_function,
+        # # #     lower,
+        # # #     upper,
+        # # #     args=(),
+        # # #     **options
+        # # # )
 
-        b = (
+        # b = (
+        #     optimum[0] if len(optimum) > 0 else self.p_parameters['b']
+        # )  # If there is no optimal value, use the initial one
+        # optimum_value = -value
+        # with suppress_stdout():
+        #     result = optimize.dual_annealing(
+        #         func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
+        #         bounds=bounds,            
+        #         maxiter=10000,
+        #         initial_temp=150,
+        #         maxfun=3000,
+        #         callback=None             
+        #     )
+
+        # optimum = result.x  # ponto ótimo
+        # optimum_value = -result.fun  # valor mínimo da função objetivo
+
+
+
+
+
+        if self.optimizer == "ps":
+            with suppress_stdout():
+                optimum, value = pso(
+                    MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
+                    lower,
+                    upper,
+                    swarmsize=1000,
+                    args=(),
+                    **options
+                )
+            b = (
             optimum[0] if len(optimum) > 0 else self.p_parameters['b']
-        )  # If there is no optimal value, use the initial one
-        optimum_value = -value
-        # (
+            )  # If there is no optimal value, use the initial one
+            optimum_value = -value
+            
+        else: 
+            with suppress_stdout():
+                result = optimize.dual_annealing(
+                        func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
+                        bounds=bounds,
+                        maxiter=10000,          
+                        initial_temp=40,       
+                        maxfun=5000,            
+                        no_local_search=False,  
+                        minimizer_kwargs={'method': 'L-BFGS-B'} 
+                    )
+
+            optimum = result.x 
+            b = (
+                optimum[0] if len(optimum) > 0 else self.p_parameters['b']
+            ) 
+            optimum_value = -result.fun  # valor mínimo da função objetivo
+                # (
         #     -optimum[0] if len(optimum) > 0 else -np.inf
         # )  # Log-likelihood value (or -inf if not optimized)
         propagations = None

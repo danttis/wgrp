@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import root_mean_squared_error, r2_score
 
 from wgrp.base_functions import Parameters
 from wgrp.wgrp_functions import ic_wgrp, qwgrp
@@ -11,6 +11,73 @@ FORMALISM = Parameters().FORMALISM
 
 
 def bootstrap_sample(parameters):
+    """
+    Generates random time series of failures using the wgrp model parameters.
+
+    This function uses the parameters alpha, beta, and q from the wgrp model to simulate failure series. 
+    For each sample, the `qwgrp` function is called to calculate the failure times, which are stored in a sample matrix.
+
+    Parameters (dict):
+        Dictionary containing the following parameters required for series generation:
+            - 'nSamples': number of samples to be generated.
+            - 'nInterventions': number of interventions in each sample.
+            - 'a': value of the alpha parameter for the wgrp model.
+            - 'b': value of the beta parameter for the wgrp model.
+            - 'q': value of the q parameter for the wgrp model.
+            - 'propagations': number of propagations to be performed.
+            - 'previousVirtualAge': initial previous virtual age of accumulated failures.
+            - 'cumulativeFailureCount': cumulative count of failures.
+            - 'timesPredictFailures': prediction time for future failures.
+
+    Returns(dict):
+        Dictionary with the following keys:
+        - 'sample_matrix': matrix (numpy array) with failure times for each sample, where each row represents a sample
+          and each column represents an intervention.
+        - 'events_in_the_future_tense': list of mean times for predicted failures.
+
+    Example:
+    --------
+    ```
+    parameters = {
+        'nSamples': 100,
+        'nInterventions': 10,
+        'a': 0.5,
+        'b': 1.5,
+        'q': 0.2,
+        'propagations': 5,
+        'previousVirtualAge': 10,
+        'cumulativeFailureCount': 0,
+        'timesPredictFailures': 20
+    }
+    result = bootstrap_sample(parameters)
+    ```
+    """
+    n_samples = parameters['nSamples']
+    n_interventions = parameters['nInterventions']
+    sample_matrix = np.zeros((n_samples, n_interventions))
+    
+
+    for i in range(0, n_samples):
+        sample = qwgrp(
+            n=n_interventions,
+            a=parameters['a'],
+            b=parameters['b'],
+            q=parameters['q'],
+            propagations=parameters['propagations'],
+            reliabilities=None,
+            failures_predict_count=True,
+            previous_virtual_age=parameters['previousVirtualAge'],
+            cumulative_failure_count=parameters['cumulativeFailureCount'],
+            times_predict_failures=parameters['timesPredictFailures']
+        )
+
+        sample_matrix[i, :] = sample['times']
+        times_predict_failures = sample['timesFailutesMeans']
+
+    return {'sample_matrix': sample_matrix, 'events_in_the_future_tense': times_predict_failures}
+
+
+
     n_samples = parameters['nSamples']
     n_interventions = parameters['nInterventions']
     sample_matrix = np.zeros((n_samples, n_interventions))
@@ -247,7 +314,7 @@ def cumulative_forecast_times(
         real_serie = accumulate_values(x)
         for quantile in quantiles:
             tmp = list(np.percentile(cum_bs, quantile * 100, axis=0))
-            mse = mean_squared_error(real_serie, tmp[:len(x)])
+            mse = root_mean_squared_error(real_serie, tmp[:len(x)])
             
             if mse < min_mse:
                 min_mse = mse
@@ -265,7 +332,7 @@ def cumulative_forecast_times(
             rando_serie = accumulate_values(bootstrap_sample[i, :])
             
             # Calculate the MSE by comparing the generated series with the real series
-            mse = mean_squared_error(real_serie, rando_serie[:len(real_serie)])
+            mse = root_mean_squared_error(real_serie, rando_serie[:len(real_serie)])
             
             # Add the series and MSE to the best series list if there's still space
             if len(mse_series) < top_n_series:
@@ -312,7 +379,7 @@ def cumulative_forecast_times(
     return res
 
 
-def append_times_between_events_from_date_events(data, time_unit):
+def add_time_diffs(data, time_unit):
     if time_unit not in [
         'days',
         'seconds',
@@ -402,7 +469,7 @@ def compute_forecasting_table(
         }
     )
 
-    return {'dataframe': ret, 'qtd_events': forecasting['eventsInTheFutureTense'], 'best_quantile': forecasting['best_quantile'] }
+    return {'dataframe': ret, 'n_forecasts_events': forecasting['eventsInTheFutureTense'], 'best_quantile': forecasting['best_quantile'] }
 
 
 def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
@@ -420,11 +487,13 @@ def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
             'AIC': IC_i['AIC'],
             'AICc': IC_i['AICc'],
             'BIC': IC_i['BIC'],
+            'LL': IC_i['LL'],
             'alpha': mle_i['a'],
             'beta': mle_i['b'],
             'q': mle_i['q'],
             'y_prev': None,
             'y_corr': None,
+            
         }
 
         if NM_i == FORMALISM['KIJIMA_I']:

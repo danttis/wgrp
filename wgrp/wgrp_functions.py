@@ -11,8 +11,8 @@ def ic_wgrp(optimum_obj: dict, x) -> dict:
     Compute classical Information Criteria values intrinsic to the Weibull-based
     Renewal Process (WGRP) model under study.
 
-    The Akaike information criterion (AIC), corrected AIC (AICc), and Bayesian
-    information criterion (BIC) are computed.
+    The Akaike information criterion (AIC), corrected AIC (AICc), Bayesian
+    information criterion (BIC), and maximum log-likelihood (logLik) are computed.
 
     Parameters:
         optimum_obj (dict):
@@ -33,7 +33,7 @@ def ic_wgrp(optimum_obj: dict, x) -> dict:
         >>> optimumObj = {
         ...     'parameters': {'formalism': parameters.FORMALISM['RP']},
         ...     'optimum': [10],
-        ...     'optimum_value' : 10
+        ...     'optimum_value': 10
         ... }
         >>> x = np.array([1, 2, 3, 4, 5])
         >>> result = ic_wgrp(optimumObj, x)
@@ -43,18 +43,6 @@ def ic_wgrp(optimum_obj: dict, x) -> dict:
         np.True_
         >>> print(result['BIC'])
         -16.7811241751318
-
-    References:
-        - Akaike H (1974):
-        A New Look at the Statistical Model Identification.
-        IEEE Transactions on Automatic Control, 19(6), 716-723. https://doi.org/10.1109/TAC.1974.1100705
-        - Stone M (1977):
-        An Asymptotic Equivalence of Choice of Model by Cross-Validation and Akaike's
-        Criterion.
-        Journal of the Royal Statistical Society. Series B (Methodological), 39(1), 44-47. https://doi.org/10.1111/j.2517-6161.1977.tb01606.x
-        - Schwarz G (1978):
-        Estimating the Dimension of a Model.
-        The Annals of Statistics, 6(2), 461-464. https://doi.org/10.1214/aos/1176344136
     """
     parameters = Parameters()
     nPar = -1
@@ -72,16 +60,97 @@ def ic_wgrp(optimum_obj: dict, x) -> dict:
         nPar = 5
     elif formalism == parameters.FORMALISM['GENERIC_PROPAGATION']:
         nPar = 3 + n
-    AIC = -2 * optimum_obj['optimum_value']
-    AIC = AIC + 2 * nPar
 
-    try:   # nesessario revisar
+    # Cálculo do AIC, AICc e BIC
+    logLik = optimum_obj['optimum_value']
+    AIC = -2 * logLik + 2 * nPar
+
+    try:
         AICc = AIC + 2 * nPar * (nPar + 1) / (n - nPar - 1)
     except ZeroDivisionError:
-        AICc = -np.inf   # necessario revisar
+        AICc = -np.inf
 
-    BIC = -2 * optimum_obj['optimum_value'] + nPar * np.log(n)
-    return {'AIC': AIC, 'AICc': AICc, 'BIC': BIC}
+    BIC = -2 * logLik + nPar * np.log(n)
+
+    return {'AIC': AIC, 'AICc': AICc, 'BIC': BIC, 'LL': logLik}
+
+
+# def ic_wgrp(optimum_obj: dict, x) -> dict:
+#     """
+#     Compute classical Information Criteria values intrinsic to the Weibull-based
+#     Renewal Process (WGRP) model under study.
+
+#     The Akaike information criterion (AIC), corrected AIC (AICc), and Bayesian
+#     information criterion (BIC) are computed.
+
+#     Parameters:
+#         optimum_obj (dict):
+#             A WGRP model. An object returned from the `get_mle_objs` function call.
+#         x (list of float):
+#             The time between events dataset.
+
+#     Returns:
+#         dict:
+#             A dictionary containing:
+#             - 'AIC': Akaike Information Criterion (AIC) value.
+#             - 'AICc': Corrected Akaike Information Criterion (AICc) value.
+#             - 'BIC': Bayesian Information Criterion (BIC) value.
+#             - 'logLik': Maximum log-likelihood of the WGRP model fitted to the data.
+
+#     Examples:
+#         >>> parameters = Parameters()
+#         >>> optimumObj = {
+#         ...     'parameters': {'formalism': parameters.FORMALISM['RP']},
+#         ...     'optimum': [10],
+#         ...     'optimum_value' : 10
+#         ... }
+#         >>> x = np.array([1, 2, 3, 4, 5])
+#         >>> result = ic_wgrp(optimumObj, x)
+#         >>> result['AIC'] == -14.0
+#         False
+#         >>> np.isfinite(result['AICc'])
+#         np.True_
+#         >>> print(result['BIC'])
+#         -16.7811241751318
+
+#     References:
+#         - Akaike H (1974):
+#         A New Look at the Statistical Model Identification.
+#         IEEE Transactions on Automatic Control, 19(6), 716-723. https://doi.org/10.1109/TAC.1974.1100705
+#         - Stone M (1977):
+#         An Asymptotic Equivalence of Choice of Model by Cross-Validation and Akaike's
+#         Criterion.
+#         Journal of the Royal Statistical Society. Series B (Methodological), 39(1), 44-47. https://doi.org/10.1111/j.2517-6161.1977.tb01606.x
+#         - Schwarz G (1978):
+#         Estimating the Dimension of a Model.
+#         The Annals of Statistics, 6(2), 461-464. https://doi.org/10.1214/aos/1176344136
+#     """
+#     parameters = Parameters()
+#     nPar = -1
+#     n = len(x)
+#     formalism = optimum_obj['parameters']['formalism']
+#     if formalism == parameters.FORMALISM['RP']:
+#         nPar = 2
+#     elif formalism == parameters.FORMALISM['NHPP']:
+#         nPar = 2
+#     elif formalism == parameters.FORMALISM['KIJIMA_I']:
+#         nPar = 3
+#     elif formalism == parameters.FORMALISM['KIJIMA_II']:
+#         nPar = 3
+#     elif formalism == parameters.FORMALISM['INTERVENTION_TYPE']:
+#         nPar = 5
+#     elif formalism == parameters.FORMALISM['GENERIC_PROPAGATION']:
+#         nPar = 3 + n
+#     AIC = -2 * optimum_obj['optimum_value']
+#     AIC = AIC + 2 * nPar
+
+#     try:   # nesessario revisar
+#         AICc = AIC + 2 * nPar * (nPar + 1) / (n - nPar - 1)
+#     except ZeroDivisionError:
+#         AICc = -np.inf   # necessario revisar
+
+#     BIC = -2 * optimum_obj['optimum_value'] + nPar * np.log(n)
+#     return {'AIC': AIC, 'AICc': AICc, 'BIC': BIC}
 
 
 # def qwgrp(
