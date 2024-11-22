@@ -1,4 +1,11 @@
 # MESOR WGRP - PACKAGE
+<!--
+Here is a more developer-oriented version:
+  1. In the terminal, install Poetry with the command: `pip install poet`.
+  2. Navigate to the `wgrp` project folder and run: `poetry install` to install the dependencies.
+  3. To generate the documentation, run: `poetry run task docs`.
+  4. If you change any functions, run the tests with: `poetry run task test`.
+-->
 
 The `wgrp` package is a data science tool aimed at analyzing widespread generalized renewal processes. Using an approach based on WGRP (Weibull-based renewal processes) [[1]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0133772), the package allows one to study the behavior of systems exposed to interventions. Although generally used for technological systems, WGRP can be applied to any system on which interventions (e.g. preventive and corrective maintenance) might arise.
 
