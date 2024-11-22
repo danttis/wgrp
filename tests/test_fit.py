@@ -15,4 +15,4 @@ def test_predict():
     model.fit(random_values)
     pred = model.predict(3)
 
-    assert not pred.empty
+    assert len(pred) > 0

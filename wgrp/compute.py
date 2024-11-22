@@ -19,21 +19,21 @@ def bootstrap_sample(parameters):
 
     Parameters (dict):
         Dictionary containing the following parameters required for series generation:
-            - 'nSamples': number of samples to be generated.
-            - 'nInterventions': number of interventions in each sample.
-            - 'a': value of the alpha parameter for the wgrp model.
-            - 'b': value of the beta parameter for the wgrp model.
-            - 'q': value of the q parameter for the wgrp model.
-            - 'propagations': number of propagations to be performed.
-            - 'previousVirtualAge': initial previous virtual age of accumulated failures.
-            - 'cumulativeFailureCount': cumulative count of failures.
-            - 'timesPredictFailures': prediction time for future failures.
+            nSamples (int): number of samples to be generated.
+            nInterventions (int): number of interventions in each sample.
+            a (float): value of the alpha parameter for the wgrp model.
+            b (float): value of the beta parameter for the wgrp model.
+            q (float): value of the q parameter for the wgrp model.
+            propagations (int) or (list): number of propagations to be performed.
+            previousVirtualAge (int): initial previous virtual age of accumulated failures.
+            cumulativeFailureCount (int): cumulative count of failures.
+            timesPredictFailures (float): prediction time for future failures.
 
     Returns(dict):
         Dictionary with the following keys:
-        - 'sample_matrix': matrix (numpy array) with failure times for each sample, where each row represents a sample
+        sample_matrix: matrix (numpy array) with failure times for each sample, where each row represents a sample
           and each column represents an intervention.
-        - 'events_in_the_future_tense': list of mean times for predicted failures.
+        events_in_the_future_tense: list of mean times for predicted failures.
 
     Example:
     --------
@@ -51,6 +51,10 @@ def bootstrap_sample(parameters):
     }
     result = bootstrap_sample(parameters)
     ```
+    References:
+    - Ferreira RJ, Firmino PRA, Cristino CT (2015):
+    A Mixed Kijima Model Using the Weibull-Based Generalized Renewal Processes.
+    PLoS ONE, 10(7), e0133772. https://doi.org/10.1371/journal.pone.0133772
     """
     n_samples = parameters['nSamples']
     n_interventions = parameters['nInterventions']
@@ -77,32 +81,20 @@ def bootstrap_sample(parameters):
     return {'sample_matrix': sample_matrix, 'events_in_the_future_tense': times_predict_failures}
 
 
-
-    n_samples = parameters['nSamples']
-    n_interventions = parameters['nInterventions']
-    sample_matrix = np.zeros((n_samples, n_interventions))
-    
-
-    for i in range(0, n_samples):
-        sample = qwgrp(
-            n=n_interventions,
-            a=parameters['a'],
-            b=parameters['b'],
-            q=parameters['q'],
-            propagations=parameters['propagations'],
-            reliabilities=None,
-            failures_predict_count = True,
-            previous_virtual_age=parameters['previousVirtualAge'],
-            cumulative_failure_count=parameters['cumulativeFailureCount'],
-            times_predict_failures=parameters['timesPredictFailures']
-        )
-
-        sample_matrix[i, :] = sample['times']
-        times_predict_failures = sample['timesFailutesMeans']
-
-    return {'sample_matrix': sample_matrix, 'events_in_the_future_tense':times_predict_failures}
-
 def accumulate_values(sequence):
+    """
+    Computes the cumulative sum of a sequence of numbers.
+
+    Parameters:
+    sequence (iterable): A sequence (e.g., list, tuple) of numerical values to be accumulated.
+
+    Returns:
+    list: A list containing the accumulated sums. Each element corresponds to the sum of the values in the sequence up to that index.
+
+    Example:
+    >>> accumulate_values([1, 2, 3, 4])
+    [1, 3, 6, 10]
+    """
     accumulated = 0
     accumulated_values = []
 
@@ -113,7 +105,7 @@ def accumulate_values(sequence):
     return accumulated_values
 
 
-def cumulative_forecast_times(
+def _cumulative_forecast_times(
     x=None,
     bootstrap_sample=None,
     conditional_means=None,
@@ -424,7 +416,7 @@ def add_time_diffs(data, time_unit):
     return data_sorted.dropna()
 
 
-def compute_forecasting_table(
+def _compute_forecasting_table(
     forecasting, initial_time=10, failure_times=None
 ):
     initial_time = forecasting['inicialTime']
@@ -472,7 +464,7 @@ def compute_forecasting_table(
     return {'dataframe': ret, 'n_forecasts_events': forecasting['eventsInTheFutureTense'], 'best_quantile': forecasting['best_quantile'] }
 
 
-def summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
+def _summarize_ics_and_parameters_table(mle_objs, x, nDecs=2):
 
     df = pd.DataFrame()
 

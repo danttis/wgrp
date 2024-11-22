@@ -2,7 +2,7 @@ from wgrp.base_functions import Get, Parameters
 from wgrp.mle_wgrp import MleWgrp
 
 
-def getMLE_objs(timesBetweenInterventions, interventionsTypes, b=1, random_state=0, optimizer="ps"):
+def _getMLE_objs(timesBetweenInterventions, interventionsTypes, b=1, random_state=0, optimizer="ps"):
     get_parameters = Get().get_parameters
     FORMALISM = Parameters().FORMALISM
     PROPAGATION = Parameters().PROPAGATION
@@ -50,14 +50,7 @@ def getMLE_objs(timesBetweenInterventions, interventionsTypes, b=1, random_state
     optimum_InterventionType = mle_wrgp(
         x, p_parameters=parameters_InterventionType
     , random_state=random_state, optimizer=optimizer).minimization()
-
-    # mle_objs = [
-    #     {'optimum_RP': optimum_RP},
-    #     {'optimum_NHPP': optimum_NHPP},
-    #     {'optimum_KijimaI': optimum_KijimaI},
-    #     {'optimum_KijimaII': optimum_KijimaII},
-    #     {'optimum_InterventionType': optimum_InterventionType}
-    # ]
+    
     mle_objs = [
         optimum_RP,
         optimum_NHPP,

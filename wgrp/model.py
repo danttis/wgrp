@@ -1,8 +1,10 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-from wgrp.compute import *
-from wgrp.getcomputer import *
-from wgrp.moments import sample_conditional_moments
+from wgrp.compute import _cumulative_forecast_times, bootstrap_sample, add_time_diffs, _summarize_ics_and_parameters_table, _compute_forecasting_table, accumulate_values
+from wgrp.base_functions import Get, Parameters
+from wgrp.getcomputer import _getMLE_objs
+from wgrp.moments import _sample_conditional_moments
 
 
 def _fit(data, time_unit='days', cumulative=False, random_state=0, optimizer="ps"):
@@ -37,7 +39,7 @@ def _fit(data, time_unit='days', cumulative=False, random_state=0, optimizer="ps
             TBEs = data
         event_types = ['Corrective'] * len(TBEs)
       
-    mle_objs = getMLE_objs(
+    mle_objs = _getMLE_objs(
         timesBetweenInterventions=list(TBEs),
         interventionsTypes=event_types,
         b=1,
@@ -53,7 +55,7 @@ get_optim = Get().get_optimum
 
 
 def _pred(n_forecasts, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, top_n_series=3):
-    df = summarize_ics_and_parameters_table(mle_objs, TBEs)[
+    df = _summarize_ics_and_parameters_table(mle_objs, TBEs)[
         'df1'
     ]
     
@@ -90,18 +92,18 @@ def _pred(n_forecasts, mle_objs, TBEs, n_steps_ahead = 0, random_series=10000, t
     )
    
     bSample = bootstrap_sample(parameters)
-    theoreticalMoments = sample_conditional_moments(parameters)
+    theoreticalMoments = _sample_conditional_moments(parameters)
 
-    forecasting = cumulative_forecast_times(
+    forecasting = _cumulative_forecast_times(
         x=TBEs,
         bootstrap_sample=bSample,
         conditional_means=theoreticalMoments,
         parameters=parameters,
         probability_of_failure=n_forecasts,
         top_n_series=top_n_series
-    )   # x=None, bootstrap_sample=None, conditional_means=None, parameters=None, probability_of_failure=0, quantile=0.1
+    ) 
 
-    forecasting_final = compute_forecasting_table(forecasting, initial_time=10)
+    forecasting_final = _compute_forecasting_table(forecasting, initial_time=10)
 
     return forecasting_final, optimum, df, parameters
 
@@ -119,6 +121,13 @@ class wgrp_model:
     DataFrame with four columns: the index of each event, the 2.5% quantile (i.e. the lower bound of the
       95% confidence interval), the 97.5% quantile (i.e. the upper bound of the 95% confidence interval), 
       and the mean value of the times to occur the events under study.
+
+    - Objects:
+        The class provides some objects used in modeling that are also directly accessible:
+            - `TBEs_`: contains the values ​​collected from the times between events (TBEs).
+            - `optimum_`: stores the parameters of the best selected formalism, generally used for the options in the `predict` function.
+            - `mle_objs_`: similar to `optimum_`, but includes the parameters of all formalisms used (RP, Non-Homogeneous Poisson Processes - NHPP, Kijima I, Kijima II and models based on intervention types).
+            - `df_`: a DataFrame that presents the series data, the best modeling for the configurations, and the performance measures of each formalism, such as AIC, AICc, BIC and Log-Likelihood (LL).
     """
 
     def __init__(self):
@@ -188,8 +197,7 @@ class wgrp_model:
                 top series.
 
             Returns:
-                DataFrame: DataFrame containing predictions with the lower quartile (2.5%), upper quartile (97.5%), 
-                and the mean.
+                Array: Returns the n-step-ahead forecast estimated from the best series defined in `top_n_series`.
 
             Examples:
                 >>> TBEs = [0.2, 1, 5, 7, 89, 21, 12]
@@ -204,8 +212,7 @@ class wgrp_model:
             self.predictions, self.optimum_, self.df_, self.parameters = _pred(
                 n_forecasts, list(self.mle_objs_), list(self.TBEs_), n_steps_ahead, random_series, top_n_series
             )
-            #self.quantile_s, self.quantile_i, self.quantile_n, self.events_in_the_future_tense, self.best_prediction = predictions['dataframe']['Quantile_97.5'], predictions['dataframe']['Quantile_2.5'], predictions['dataframe']['newQuantile'], predictions['n_forecasts_events'], predictions['dataframe']['best_prediction']
-            return self.predictions['dataframe']['Mean'].iloc[len(self.TBEs_)-1:]
+            return self.predictions['dataframe']['best_prediction'].iloc[len(self.TBEs_)-1:].values
     
     def plot(self, n_random_series=10):
         """
@@ -253,9 +260,6 @@ class wgrp_model:
         # Plot the predicted mean of the WGRP model
         ax.plot(self.predictions['dataframe']['Mean'], label='WGRP Mean', color='red')
 
-        # Plot the real observed series in blue
-        ax.plot(real_serie, label='Observed Series', color='blue')
-
         # Plot the predicted lower quantile (2.5%)
         ax.plot(self.predictions['dataframe']['Quantile_2.5'], label=None, color='black')
 
@@ -264,6 +268,9 @@ class wgrp_model:
 
         # Plot the 'best prediction' in green
         ax.plot(self.predictions['dataframe']['best_prediction'], label='Best Prediction', color='green')
+
+        # Plot the real observed series in blue
+        ax.plot(real_serie, label='Observed Series', color='blue')
 
         # Mark the end of the training data with a vertical dashed line
         ax.axvline(x=len(real_serie) - 1, color='green', linestyle='--', label='End of Train Data')

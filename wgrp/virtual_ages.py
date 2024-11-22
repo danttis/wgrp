@@ -104,7 +104,7 @@ def get_sample_virtual_ages(x, q, propagations):
     return virtualAges
 
 
-def get_virtual_ages_and_a(b, q, propagations, x) -> dict:
+def _get_virtual_ages_and_a(b, q, propagations, x) -> dict:
     """
     Compute virtual ages and 'a' parameter using given inputs.
 

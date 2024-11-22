@@ -6,7 +6,7 @@ import numpy as np
 from pyswarm import pso
 
 from wgrp.base_functions import *
-from wgrp.virtual_ages import get_virtual_ages_and_a
+from wgrp.virtual_ages import _get_virtual_ages_and_a
 from wgrp.wgrp_functions import lwgrp
 
 from scipy import optimize
@@ -79,7 +79,7 @@ class MleWgrp:
         log_likelihood = -np.inf
 
         if b > 0:
-            virtual_a = get_virtual_ages_and_a(b, q, propagations, self.x)['a']
+            virtual_a = _get_virtual_ages_and_a(b, q, propagations, self.x)['a']
             if np.isfinite(virtual_a):
                 log_likelihood = lwgrp(
                     self.x, virtual_a, b, q, propagations, log=True
@@ -157,51 +157,6 @@ class MleWgrp:
         
         bounds = list(zip(lower, upper))
 
-        # with suppress_stdout():
-        #     optimum = optimize.dual_annealing(
-        #         func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
-        #         bounds=bounds,           
-        #         maxiter=10000,
-        #         initial_temp=40,
-        #         maxfun=3000,
-        #         no_local_search=True,
-        #         callback=None            
-        #     ).x
-        # # with suppress_stdout():
-        # #     optimum, value = optimize.dual_annealing(func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,bounds=(lower,
-        # #         upper), maxiter=10000, initial_temp=40, maxfun = 3000, no_local_search=True, callback=False
-        # #     )
-
-        # # # # Optimization function call (PSO from pyswarm package)
-        # # # optimum, value = pso(
-        # # #     MleWgrp(self.x, self.p_parameters).objective_function,
-        # # #     lower,
-        # # #     upper,
-        # # #     args=(),
-        # # #     **options
-        # # # )
-
-        # b = (
-        #     optimum[0] if len(optimum) > 0 else self.p_parameters['b']
-        # )  # If there is no optimal value, use the initial one
-        # optimum_value = -value
-        # with suppress_stdout():
-        #     result = optimize.dual_annealing(
-        #         func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
-        #         bounds=bounds,            
-        #         maxiter=10000,
-        #         initial_temp=150,
-        #         maxfun=3000,
-        #         callback=None             
-        #     )
-
-        # optimum = result.x  # ponto ótimo
-        # optimum_value = -result.fun  # valor mínimo da função objetivo
-
-
-
-
-
         if self.optimizer == "ps":
             with suppress_stdout():
                 optimum, value = pso(
@@ -278,7 +233,7 @@ class MleWgrp:
                     propagations = optimum[2 : (self.n + 2)]
 
         # Checking and adjusting "a" and "virtualAges"
-        a_vs = get_virtual_ages_and_a(b, q, propagations, self.x)
+        a_vs = _get_virtual_ages_and_a(b, q, propagations, self.x)
         a = a_vs['a']
         virtualAges = a_vs['virtualAges']
 

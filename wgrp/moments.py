@@ -5,7 +5,7 @@ from wgrp.virtual_ages import virtual_age
 from wgrp.wgrp_functions import pwgrp
 
 
-def conditional_moments(parameters, v):
+def _conditional_moments(parameters, v):
     a = parameters['a']
     b = parameters['b']
     x_aux = 1 / b
@@ -38,7 +38,7 @@ def conditional_moments(parameters, v):
     return ret
 
 
-def sample_conditional_moments(parameters):
+def _sample_conditional_moments(parameters):
     n = parameters['nInterventions']
     q = parameters['q']
     Ex = np.zeros(n)
@@ -49,7 +49,7 @@ def sample_conditional_moments(parameters):
     current_virtual_age = parameters['previousVirtualAge']
 
     for i in range(n):
-        cond_mom = conditional_moments(parameters, current_virtual_age)
+        cond_mom = _conditional_moments(parameters, current_virtual_age)
         Ex[i] = cond_mom['mean']
         Vx[i] = cond_mom['var']
         R_Ex[i] = cond_mom['R_mean']
