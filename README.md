@@ -36,11 +36,11 @@ from wgrp.model import wgrp_model
 # Initialize the model
 model = wgrp_model()
 
-# Example of failure data (time between failures - TBFs)
-TBFs = [1, 2, 5]
+# Example of failure data (time between failures)
+data = [1, 2, 5]
 
 # Fit the model to crash data
-model.fit(TBFs) # See the function documentation for supported data types
+model.fit(data) # See the function documentation for supported data types
 
 # Make predictions
 predict = model.predict(1)
