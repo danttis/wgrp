@@ -58,6 +58,7 @@ model.fit(data) # See the function documentation for supported data types
 # Make predictions
 predict = model.predict(1)
 ```
+See more about function documentation at: [WGRP - Read the Docs](https://wgrp.readthedocs.io/en/latest/)
 
 ---
 
