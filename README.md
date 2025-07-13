@@ -1,4 +1,5 @@
 # MESOR WGRP - PACKAGE
+
 <!--
 Here is a more developer-oriented version:
   1. In the terminal, install Poetry with the command: `pip install poet`.
@@ -62,7 +63,13 @@ See more about function documentation at: [WGRP - Read the Docs](https://wgrp.re
 
 ---
 
+
 ### Additional Notes
 
 - Be sure to consult the full documentation for additional details on the parameters and data types supported by the functions.
 - For more examples and advanced usage, see the [Jupyter notebook](https://github.com/danttis/wgrp/blob/main/Example_of_use.ipynb) available in the GitHub repository.
+
+If you have any questions about the package, its usage, or tips, feel free to contact the developers:  
+**Francisco Junior Peixoto Dantas** [📧](mailto:juniordante01@gmail.com)  
+**Paulo Renato Alves Firmino** [📧](mailto:paulo.firmino@ufca.edu.br)
+
