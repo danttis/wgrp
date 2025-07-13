@@ -13,9 +13,15 @@ The `wgrp` package is a data science tool aimed at analyzing widespread generali
 
 - **Production Systems Breakdowns**: After registering when a few corrective and preventive interventions occurs, the  times between these interventions can be modeled via WGRP. It makes possible to evaluate the quality of the interventions as well as to predict when new interventions will be demanded.  Further, one can compare the performance of a number of systems via the respective WGRP models [[2]](https://www.sciencedirect.com/science/article/abs/pii/S0951832018308391).
 
-- **Decrease in the value of a Company's Shares**: If a company presents relevant drops through the time, the times between drops can be modeled and thus forecasted via WGRP. Further, one can compare the finance performance of a number of companies via the respective WGRP models. 
-
 - **Natural Catastrophic Events**: In the face of the history of when previous catastrophic events have occurred, one can model and forecast when new catastrophic events might occur. It is also possible to compare the natural condition between territories. 
+
+
+Furthermore, the package supports the consideration of different assumptions about the effect of maintenance through the Kijima I and II models, which represent, respectively:
+
+- Kijima I: where the degree of restoration depends only on the time since the last intervention;
+- Kijima II: where the cumulative effect of interventions is considered, reflecting more realistic scenarios in complex systems.
+
+These models are useful for studying how partial or imperfect maintenance affects the time to next failure.
 
 ## How to use
 
