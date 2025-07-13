@@ -1,9 +1,13 @@
 [tool.poetry]
 name = "wgrp"
-version = "0.1.1"
+version = "0.1.2"
 description = "A data science package for analyzing generalized renewal processes. The wgrp package is a powerful data science tool designed for analyzing generalized renewal processes, with a special focus on Weibull-based renewal processes (WGRP)."
 license = "APACHE 2.0"
 authors = ["Junior Dantas <juniordante01@gmail.com>", "Paulo Renato Alves Firmino <paulo.firmino@ufca.edu.br>"]
+maintainers = [
+    { name = "Junior Dantas", email = "juniordante01@gmail.com" },
+    { name = "Paulo Renato Alves Firmino", email = "paulo.firmino@ufca.edu.br" },
+]
 readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
