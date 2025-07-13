@@ -8,11 +8,11 @@ build:
   tools:
     python: "3.11"
 
-  jobs:
-    post_create_environment:
-      - pip install poetry
-      - poetry config virtualenvs.create false
-      - poetry add --group doc mkdocs-material@^9.5.28 mkdocstrings@^0.25.1 mkdocstrings-python@^1.10.5
+jobs:
+  post_create_environment:
+    - pip install poetry
+    - poetry config virtualenvs.create false
+    - poetry add --group doc mkdocs readthedocs mkdocs-material@^9.5.28 mkdocstrings@^0.25.1 mkdocstrings-python@^1.10.5
 
 
     post_install:
