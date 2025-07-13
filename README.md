@@ -65,4 +65,4 @@ See more about function documentation at: [WGRP - Read the Docs](https://wgrp.re
 ### Additional Notes
 
 - Be sure to consult the full documentation for additional details on the parameters and data types supported by the functions.
-- For more examples and advanced usage, see the [Jupyter notebook](Example_of_use.ipynb) available in the GitHub repository.
+- For more examples and advanced usage, see the [Jupyter notebook](https://github.com/danttis/wgrp/blob/main/Example_of_use.ipynb) available in the GitHub repository.
