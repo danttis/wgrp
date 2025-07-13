@@ -36,6 +36,8 @@ extra_css:
   - stylesheets/extra.css
 
 plugins:
+  - autorefs:
+      link_titles: auto
   - mkdocstrings:
       handlers:
         python:

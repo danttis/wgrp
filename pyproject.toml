@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "wgrp"
 version = "0.1.0"
-description = ""
+description = "A data science package for analyzing generalized renewal processes. The wgrp package is a powerful data science tool designed for analyzing generalized renewal processes, with a special focus on Weibull-based renewal processes (WGRP)."
 license = "APACHE 2.0"
-authors = ["danttis <juniordante01@gmail.com>"]
+authors = ["danttis <juniordante01@gmail.com>", "Paulo Renato Alves Firmino <paulo.firmino@ufca.edu.br>"]
 readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,13 +18,11 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.11"
-numpy = "^2.0.0"
-pandas = "^2.2.2"
-pyswarm = "^0.6"
-scipy = "^1.14.0"
-scikit-learn = "^1.5.1"
-matplotlib = "^3.9.2"
-
+numpy = ">=1.21.0"        
+pandas = ">=1.3.0"        
+pyswarm = ">=0.5"         
+scipy = ">=1.9.0"         
+matplotlib = ">=3.4.0"   
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
