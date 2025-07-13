@@ -2,13 +2,16 @@ from datetime import datetime, timedelta
 
 import numpy as np
 import pandas as pd
-from sklearn.metrics import root_mean_squared_error, r2_score
 
 from wgrp.base_functions import Parameters
 from wgrp.wgrp_functions import ic_wgrp, qwgrp
 
 FORMALISM = Parameters().FORMALISM
 
+def _root_mean_squared_error(y_true, y_pred):
+    y_true = np.asarray(y_true)
+    y_pred = np.asarray(y_pred)
+    return np.sqrt(np.mean((y_true - y_pred) ** 2))
 
 def bootstrap_sample(parameters):
     """
@@ -306,7 +309,7 @@ def _cumulative_forecast_times(
         real_serie = accumulate_values(x)
         for quantile in quantiles:
             tmp = list(np.percentile(cum_bs, quantile * 100, axis=0))
-            mse = root_mean_squared_error(real_serie, tmp[:len(x)])
+            mse = _root_mean_squared_error(real_serie, tmp[:len(x)])
             
             if mse < min_mse:
                 min_mse = mse
@@ -324,7 +327,7 @@ def _cumulative_forecast_times(
             rando_serie = accumulate_values(bootstrap_sample[i, :])
             
             # Calculate the MSE by comparing the generated series with the real series
-            mse = root_mean_squared_error(real_serie, rando_serie[:len(real_serie)])
+            mse = _root_mean_squared_error(real_serie, rando_serie[:len(real_serie)])
             
             # Add the series and MSE to the best series list if there's still space
             if len(mse_series) < top_n_series:
