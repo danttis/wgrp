@@ -16,6 +16,9 @@ jobs:
         
       - name: Install Poetry
         run: pip install poetry
+  
+      - name: generate lock 
+        run: poetry lock
         
       - name: Install Dependencies
         run: poetry install --without doc
