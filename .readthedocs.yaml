@@ -15,5 +15,4 @@ build:
 
     post_install:
       - poetry install
-      - poetry lock 
-      - poetry install --only doc
+
