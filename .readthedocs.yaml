@@ -8,10 +8,7 @@ build:
   tools:
     python: "3.11"
 
-python:
-  install:
-    - method: poetry
-      only: [doc]
-
-mkdocs:
-  configuration: mkdocs.yml
+  jobs:
+    post_create_environment:
+      - pip install poetry
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --only doc
