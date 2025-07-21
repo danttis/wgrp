@@ -69,6 +69,14 @@ See more about function documentation at: [WGRP - Read the Docs](https://wgrp.re
 - Be sure to consult the full documentation for additional details on the parameters and data types supported by the functions.
 - For more examples and advanced usage, see the [Jupyter notebook](https://github.com/danttis/wgrp/blob/main/Example_of_use.ipynb) available in the GitHub repository.
 
+---
+
+### Acknowledgements
+
+We would like to thank the [National Council for Scientific and Technological Development (CNPq)](https://www.gov.br/cnpq/pt-br) and the [Federal University of Cariri (UFCA)](https://www.ufca.edu.br/) for granting the scholarships, and the Institutional Program for Scientific and Technological Initiation for all their support during the development of the project.
+
+---
+
 If you have any questions about the package, its usage, or tips, feel free to contact the developers:  
 [Francisco Junior Peixoto Dantas](mailto:juniordante01@gmail.com)  
 [Paulo Renato Alves Firmino](mailto:paulo.firmino@ufca.edu.br)
