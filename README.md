@@ -144,7 +144,7 @@ We would like to thank the [National Council for Scientific and Technological De
 
 If you have any questions about the package, its usage, or tips, feel free to contact the developers:
 
-[Francisco Junior Peixoto Dantas](mailto:juniordante01@gmail.com)
+[Junior Dantas](mailto:juniordante01@gmail.com)
 [Paulo Renato Alves Firmino](mailto:paulo.firmino@ufca.edu.br)
 
 ## License
