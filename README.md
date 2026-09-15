@@ -89,7 +89,7 @@ Kijima I and Kijima II [[1]](https://journals.plos.org/plosone/article?id=10.137
 
 ## Online (streaming) version
 
-The `wgrp_online_model` class ingests the times between events (TBEs) one at a time and **never refits from scratch** over the whole series — just like the online linear regression update, in which running statistics are updated in O(1) per new observation:
+The `wgrp_online_model` class ingests the times between events (TBEs) one at a time and **never refits from scratch** over the whole series — just like the [linear regression update](https://github.com/danttis/Update-Linear-Regression), in which running statistics are updated in O(1) per new observation:
 
 - **Virtual age**: a Markov chain that depends only on the previous virtual age — O(1) per event;
 - **Scale parameter `a`**: closed-form MLE `a = (S_n/n)^(1/b)` updated from a running sum `S` — O(1) per event and exactly equal to the value the standard package computes from scratch on the same data prefix;
