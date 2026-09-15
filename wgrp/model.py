@@ -204,8 +204,8 @@ class wgrp_model:
                 >>> model = wgrp_model()
                 >>> model.fit(TBEs, time_unit='minutes')
                 >>> predictions = model.predict(3)
-                alpha = 1.1910044773056132
-                beta = 0.41122725565015567
+                alpha = 1.1910588150112185
+                beta = 0.4112312204674815
                 q = 1
             """
 

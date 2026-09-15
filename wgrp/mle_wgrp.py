@@ -157,34 +157,44 @@ class MleWgrp:
         
         bounds = list(zip(lower, upper))
 
+        # The global optimizers probe extreme parameter values (very large
+        # `b`, `q` outside [0, 1]) for which the virtual age overflows to
+        # inf; the objective already rejects those points (it returns inf),
+        # so the resulting numpy RuntimeWarnings are just noise and are
+        # silenced in this scope only.
         if self.optimizer == "ps":
-            with suppress_stdout():
-                optimum, value = pso(
+            with suppress_stdout(), np.errstate(all='ignore'):
+                result = pso(
                     MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
                     lower,
                     upper,
                     swarmsize=1000,
                     args=(),
+                    seed=self.random_state,
                     **options
                 )
+            # pyswarm >= 1.0 returns a scipy-compatible OptimizeResult
+            # (fields `x` and `fun`) instead of the (optimum, value) tuple
+            optimum = np.asarray(result.x)
+            value = float(result.fun)
             b = (
             optimum[0] if len(optimum) > 0 else self.p_parameters['b']
             )  # If there is no optimal value, use the initial one
             optimum_value = -value
             
-        else: 
-            with suppress_stdout():
+        else:
+            with suppress_stdout(), np.errstate(all='ignore'):
                 result = optimize.dual_annealing(
-                        func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
-                        bounds=bounds,
-                        maxiter=10000,          
-                        initial_temp=40,       
-                        maxfun=5000,            
-                        no_local_search=False,  
-                        minimizer_kwargs={'method': 'L-BFGS-B'} 
-                    )
+                    func=MleWgrp(self.x, self.p_parameters, self.random_state).objective_function,
+                    bounds=bounds,
+                    maxiter=10000,
+                    initial_temp=40,
+                    maxfun=5000,
+                    no_local_search=False,
+                    minimizer_kwargs={'method': 'L-BFGS-B'},
+                )
 
-            optimum = result.x 
+            optimum = result.x
             b = (
                 optimum[0] if len(optimum) > 0 else self.p_parameters['b']
             ) 

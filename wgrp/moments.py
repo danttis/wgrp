@@ -23,7 +23,10 @@ def _conditional_moments(parameters, v):
     l_aux = (v / a) ** b
     l_aux += np.log(a) - np.log(b)
     l_aux2 = b * gamma1 + upper_gamma1 - upper_gamma2
-    l_aux2 = np.log(l_aux2)
+    # l_aux2 may be 0 in edge cases of the bootstrap sampling; np.log(0)
+    # gives -inf, which is handled by the np.isfinite guard below
+    with np.errstate(divide='ignore'):
+        l_aux2 = np.log(l_aux2)
     l_aux += l_aux2
 
     aux = np.exp(l_aux) if np.isfinite(l_aux) and l_aux > 0 else 0
